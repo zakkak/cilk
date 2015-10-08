@@ -9,12 +9,12 @@ FILE_IDENTITY(ident_cilk_internal_h,
  *  under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation; either version 2.1 of the License, or (at
  *  your option) any later version.
- *  
+ *
  *  This library is distributed in the hope that it will be useful, but
  *  WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *  Lesser General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307,
@@ -27,7 +27,7 @@ FILE_IDENTITY(ident_cilk_internal_h,
 #include <config.h>
 #endif
 
-#if HAVE_PTHREAD
+#if HAVE_PTHREAD_H
 #include <pthread.h>
 #endif
 
@@ -73,14 +73,14 @@ enum AbortStatus { ABORT_ALL = 30 , ALMOST_NO_ABORT, NO_ABORT};
 struct InletClosure {
      struct Closure_s *this;                /* child that structure is for */
      struct InletClosure *next;
-  
+
      void *receiver;
      void (*inlet) (CilkWorkerState *const, void *, void *, void *);
      int argsize;
      void *inlet_args;
 };
 
-/* 
+/*
  * the list of children is not distributed among
  * the children themselves, in order to avoid extra protocols
  * and locking.
@@ -123,7 +123,7 @@ struct Closure_s {
      WHEN_CILK_DEBUG(int malloced;)
 
      /* critical path and work */
-     Cilk_time cp;      
+     Cilk_time cp;
      Cilk_time work;
 
      CILK_CACHE_LINE_PAD;
@@ -193,7 +193,7 @@ struct CilkGlobalState_s{
      Cilk_mutex barrier_lock;
      volatile int barrier_counter;
      volatile int barrier_release;
-     struct Cilk_im_descriptor 
+     struct Cilk_im_descriptor
           global_im_descriptor [CILK_INTERNAL_MALLOC_BUCKETS];
      struct Cilk_im_stats global_im_info;
      int im_allocated;
@@ -288,7 +288,7 @@ enum {
      EVENT_USER7,
      EVENT_NTYPES  		/* this must be last */
 };
-     
+
 extern void Cilk_event(CilkWorkerState *const ws, int type);
 extern void Cilk_event_gathering_init(CilkContext *const context);
 extern void Cilk_stats_terminate(CilkContext *const context);
