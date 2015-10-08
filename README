@@ -56,7 +56,7 @@ The following processor families are supported:
 * PowerPC. (tested on PowerPC 750 aka G3)
 * Alpha.   (tested on 21264)
 * MIPS.    (tested on R10000)
-* Intel IA-64. 
+* Intel IA-64.
 
 Porting to other architectures requires a few lines of assembly code
 to implement memory barriers and mutual-exclusion locks.
@@ -81,7 +81,7 @@ You do this:
  aclocal
  automake
  autoconf
- ./configure
+ ./configure CFLAGS="-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200809L" --disable-static
  make
 
 COPYRIGHT
@@ -89,7 +89,7 @@ COPYRIGHT
 
 Copyright (c) 2000 Massachusetts Institute of Technology
 Copyright (c) 2000 Matteo Frigo
-Portions of cilk2c Copyright (c) 1989, 1990 James A. Roskind 
+Portions of cilk2c Copyright (c) 1989, 1990 James A. Roskind
 
 
 LICENSE
