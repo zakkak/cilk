@@ -184,7 +184,7 @@ GLOBAL void PrintList(GBUF *out, List *list, int tab_depth);
 #define fPrintList(file,l,tab_depth) WITH_FILE_GBUF(gb,file,PrintList(gb,l,tab_depth))
 GLOBAL int PrintOp(GBUF *, OpType op);	/* operators.c */
 GLOBAL void CharToText(char *array, unsigned char value);
-GLOBAL inline int PrintChar(GBUF *out, int c);	/* print.c */
+GLOBAL int PrintChar(GBUF *out, int c);	/* print.c */
 GLOBAL int PrintString(GBUF *out, const char *string);	/* print.c */
 
 /* warning.c */

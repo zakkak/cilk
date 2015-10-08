@@ -4,7 +4,7 @@
  *
  *  Adapted from Clean ANSI C Parser
  *  Eric A. Brewer, Michael D. Noakes
- * 
+ *
  *************************************************************************/
 /*
  *
@@ -414,10 +414,10 @@ PRIVATE inline void PrintPrim(GBUF *out, Node *node, UNUSED(primNode *u), UNUSED
 PRIVATE inline void PrintTdef(GBUF *out, Node *node, tdefNode *u, UNUSED(int offset), UNUSED(Bool norecurse))
 {
      /* temp fix for core dump when printing ast  -Angelina */
-     if( u->type == NULL ) 
+     if( u->type == NULL )
           gbprintf(out, "Tdef: %s (%d) (type=NULL)  ", u->name, node->print_uid);
-     else 
-          gbprintf(out, "Tdef: %s (%d) (type=%d)  ", u->name, node->print_uid, u->type->print_uid); 
+     else
+          gbprintf(out, "Tdef: %s (%d) (type=%d)  ", u->name, node->print_uid, u->type->print_uid);
      PrintCoord(out, &node->coord);
      PrintTQ(out, u->tq, offset, norecurse);
 #if 0
@@ -721,13 +721,13 @@ static void assign_uids (Node *n) {
 
 
 GLOBAL void PrintWildcard(GBUF *out, Node *node, int offset) {
-  
+
   PrintCRSpaces(out, offset);
   switch (node->wTyp) {
-  case WildcardE:  
+  case WildcardE:
     gbprintf(out, "WildcardE: ");
     break;
-  case WildcardD:  
+  case WildcardD:
     gbprintf(out, "WildcardD: ");
     break;
   case WildcardT:
@@ -761,7 +761,7 @@ GLOBAL void PrintNode(GBUF *out, Node *node, int offset)
   if (IsWildcard(node)) {
     PrintWildcard(out, node, offset);
   }
-  
+
 #define CODE(name, node, union) Print##name(out,node,union,offset,norecurse)
   ASTSWITCH(node, CODE)
 #undef CODE
@@ -883,7 +883,7 @@ GLOBAL void CharToText(char *array, unsigned char value)
      }
 }
 
-GLOBAL inline int PrintChar(GBUF *out, int value)
+GLOBAL int PrintChar(GBUF *out, int value)
 {
      switch (value) {
 	 case '\n':
