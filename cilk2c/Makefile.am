@@ -1,4 +1,4 @@
-pkglib_PROGRAMS = cilk2c
+bin_PROGRAMS = cilk2c
 
 cilk2c_SOURCES = analyze.c ast.c complex-types.c constexpr.c		\
 container.c conversions.c dataflow.c elide.c initializer.c list.c	\

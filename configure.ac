@@ -1,9 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT
+AC_INIT([cilk], [5.4.6])
 AC_CONFIG_SRCDIR([config.h.in])
 AM_CONFIG_HEADER([config.h runtime/cilk-sysdep.h])
 AC_PREREQ(2.53)
-AM_INIT_AUTOMAKE(cilk, 5.4.6)
+AM_INIT_AUTOMAKE
 AC_CANONICAL_HOST
 
 dnl Checks for programs.
@@ -78,5 +78,3 @@ AC_CONFIG_FILES([FAQ/Makefile
                  support/Makefile])
 
 AC_OUTPUT
-
-
