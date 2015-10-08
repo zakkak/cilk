@@ -1,0 +1,419 @@
+%% 
+%% This is file `supertech.sty',
+%% 
+%% It includes most macros used for the CLR book
+%% and some of the macros used for course handouts
+
+\def\fileversion{1.0}
+\def\filedate{1998/10/16}
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{supertech}[\filedate{} macros for the Supertech group at MIT]
+
+\usepackage{latexsym}
+%\usepackage{bbm}
+\usepackage[small,bf]{caption}
+\usepackage{graphics}
+
+%% Page size
+
+\setlength{\oddsidemargin}{0pt}
+\setlength{\evensidemargin}{0pt}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{0in}
+\setlength{\textheight}{8.5in}
+
+%% Misc
+
+% Some hacks to make HTML happier.
+\newcommand{\vskipargs}[1]{\vskip #1}
+\newcommand{\newproc}{\hrule\vskipargs{1ex plus 0.1ex minus 0.1ex}}
+
+% Tilde for webstuff
+\newcommand{\webtilde}{\raisebox{-.8ex}\~}
+
+% Comment out chunks.
+\newcommand{\punt}[1]{}
+
+% Footnote commands.
+\newcommand{\footnotenonumber}[1]{{\def\thempfn{}\footnotetext{#1}}}
+\newcommand{\footnotetight}[1]{\footnote{\renewcommand\baselinestretch{1}\footnotesize #1}}
+
+%% Math Stuff, Symbols
+
+% Number sets.
+%\newcommand{\reals}     	{\mathbbm{R}}
+%\newcommand{\integers}  	{\mathbbm{Z}}
+%\newcommand{\naturals}  	{\mathbbm{N}}
+%\newcommand{\rationals} 	{\mathbbm{Q}}
+%\newcommand{\complex}   	{\mathbbm{C}}
+
+% Useful shorthands.
+
+\newcommand{\norm}[1]		{\left\| #1\right\|}
+\newcommand{\set}[1]    	{\left\{ #1 \right\}}
+\newcommand{\abs}[1]    	{\left| #1\right|}
+\newcommand{\card}[1]   	{\left| #1\right|}
+\newcommand{\floor}[1]  	{\left\lfloor #1 \right\rfloor}
+\newcommand{\ceil}[1]   	{\left\lceil #1 \right\rceil}
+\newcommand{\ang}[1]    	{\ifmmode{\left\langle #1 \right\rangle}
+			 	 \else{$\left\langle${#1}$\right\rangle$}\fi}
+ 			    		% the \if allows use outside mathmode,
+			 		% but will swallow following space there!
+\newcommand{\sbrace}[1]{\left[#1\right]}
+\newcommand{\cbrace}[1]{\left\{#1\right\}}
+\newcommand{\paren}[1]		{\left( #1 \right)}
+\newcommand{\prob}[1]		{\Pr\left\{ #1 \right\}}
+\newcommand{\Var}		{\mathop{\rm Var}\nolimits}
+\newcommand{\expect}[1]		{{\rm E}\left[ #1 \right]}
+\newcommand{\expectsq}[1]	{{\rm E}^2\left[ #1 \right]}
+\newcommand{\variance}[1]	{{\rm Var}\left[ #1 \right]}
+\renewcommand{\choose}[2]	{{{#1}\atopwithdelims(){#2}}}
+
+\def\pmod#1{\allowbreak\mkern12mu({\rm mod}\,\,#1)}
+
+\newcommand{\matx}[2]		{\left(\!\!\!\begin{array}{*{#1}{c}}#2\end{array}\!\!\!\right)}
+\newcommand{\Adj}		{\mathop{\rm Adj}\nolimits}
+\newcommand{\percent}[1]	{#1\%}
+
+\newtheorem{principle}{Principle}
+\newtheorem{theorem}		{Theorem}
+\newtheorem{lemma}[theorem]	{Lemma}
+\newtheorem{corollary}[theorem]	{Corollary}
+\newtheorem{xample}		{Example}
+
+\newenvironment{example}	{\begin{xample}\rm}{\end{xample}}
+
+\newcommand{\proof}		{\noindent{\em Proof.}\hspace{1em}}
+
+\def\squarebox#1{\hbox to #1{\hfill\vbox to #1{\vfill}}}
+
+\newcommand{\qedbox}		{\vbox{\hrule\hbox{\vrule\squarebox{.667em}\vrule}\hrule}}
+\newcommand{\qed}		{\nopagebreak\mbox{}\hfill\qedbox\smallskip}
+\newcommand{\eqnref}[1]		{(\protect\ref{#1})}
+
+\newcommand{\twodots}		{\mathinner{\ldotp\ldotp}}
+\newcommand{\transpose}		{^{\mbox{\scriptsize \sf T}}}
+\newcommand{\amortized}[1]	{\widehat{#1}}
+
+\renewcommand{\cases}[1]	{\left\{ \begin{array}{ll}#1\end{array}\right.}
+\newcommand{\cif}[1]		{\mbox{if $#1$}}
+\newcommand{\cwhen}[1]		{\mbox{when $#1$}}
+\newcommand{\cotherw}		{\mbox{otherwise}}
+
+%Narrow arrays
+\newlength{\savearraycolsep}
+\newcommand{\narrowarray}[1]{\setlength{\savearraycolsep}{\arraycolsep}\setlength{\arraycolsep}{#1\arraycolsep}}
+\newcommand{\normalarray}{\setlength{\arraycolsep}{\savearraycolsep}}
+
+% definitions and special styles
+
+\newcommand{\defn}[1]		{{\textit{\textbf{\boldmath #1}}}}
+\newcommand{\defi}[1]		{{\textit{\textbf{\boldmath #1\/}}}}
+\newcommand{\const}[1]		{\ifmmode\mbox{\textsc{#1}}\else\textsc{#1}\fi}
+\newcommand{\reduc}		{\leq_{\rm P}}
+\newcommand{\lang}[1]		{\ifmmode\mathord{\mathcode`-="702D\rm#1\mathcode`\-="2200}\else{\rm#1}\fi}
+\newcommand{\ckt}[1]		{\ifmmode \sc #1\else$\sc #1$\fi}
+\newcommand{\id}[1]		{\ifmmode\mathit{#1}\else\textit{#1}\fi}
+\newcommand{\proc}[1]		{\ifmmode\mbox{\textsc{#1}}\else\textsc{#1}\fi}
+\newcommand{\procdecl}[1]	{\proc{#1}\vrule width0pt height0pt depth 7pt \relax}
+\newcommand{\func}[1]		{\ifmmode\mathop{\mathcode`-="702D\rm #1\mathcode`\-="2200}\nolimits
+				 \else$\mathop{\mathcode`-="702D\rm #1\mathcode`\-="2200}\nolimits$\fi}
+%% Code environment
+
+\newif\ifcodeinbox
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The Code environment %%%
+%% The following commands are so we can automatically number and symbolically reference
+%% lines.
+%% The ``codelinenumber'' counter counts the current line number
+\newcounter{codelinenumber}
+%% The \zeroli command zeros the line number counter
+\newcommand{\zeroli}{\setcounter{codelinenumber}0}
+%% The \li command bumps the counter, outputs it, and skips some space
+%% It also GLOBALLY sets the value of \@currentlabel, so that the \label
+%% commands on the same line work OK.  The problem otherwise is that Latex
+%% uses groups on each field of a line in tabbing mode, and this causes
+%% \@currentlabel to get reset as soon as a field ends (e.g. at the \').
+%% Now, the label can appear after the \\, as in
+%%	\li \>\>$x\gets y$ \\ \label{li:assign-x}
+%%
+
+\def\@startline{\global\@curtabmar\@nxttabmar\relax
+   \global\@curtab\@curtabmar\setbox\@curline\hbox
+    {}\@startfield\global\lifalse\strut}
+
+\newenvironment{code}{\global\codeinboxtrue%
+\setbox\strutbox\hbox{\vrule height 9pt depth 4pt width0pt}%
+\noindent\begin{tabbing}%
+\zeroli\setlength{\tabbingsep}{1em}
+\hspace*{1em}\=999\ifdoubledigit9\fi
+\=\ {\bf if} \={\bf then} \={\bf if} \={\bf then}
+	\={\bf if} \={\bf then} \={\bf if} \={\bf then} \={\bf if} \={\bf then}
+	\={\bf if} \=\+\+\kill}{\end{tabbing}\global\codeinboxfalse}
+
+\newif\ifdoubledigit
+\newcommand{\codebox}[1]{\setbox0=\vbox{\begin{code}#1\end{code}}
+\ifnum\c@codelinenumber>9\global\doubledigittrue\else\doubledigitfalse\fi
+\vskip1sp\noindent\hskip-14pt%% 
+\parbox{\textwidth}{\begin{code}\protect#1\end{code}}\global\let\@currentlabel=\thechapter}
+
+\newif\ifli
+\newcommand{\li}{\global\litrue\stepcounter{codelinenumber}%
+\ifdoubledigit%
+\hbox to8pt{\hss\thecodelinenumber\hskip5pt}\else%
+\hbox to8pt{\hskip-1pt\thecodelinenumber\hss}\fi%
+\xdef\@currentlabel{\p@codelinenumber\thecodelinenumber}\'}
+
+\newcommand{\For}		{{\bf for} }
+\newcommand{\To}		{{\bf to} }
+\newcommand{\By}		{{\bf by} }
+\newcommand{\Downto}		{{\bf downto} }
+\newcommand{\While}		{{\bf while} }
+\newcommand{\Repeat}		{\>\>{\bf repeat}\'}
+\newcommand{\Until}		{\>\>{\bf until}\'}
+\newcommand{\If}		{{\bf if} }
+\newcommand{\Then}		{\>{\bf then}\>}
+\newcommand{\Else}		{\>{\bf else}\>}
+\newcommand{\ElseIf}		{{\bf elseif}}
+\newcommand{\ElseNoIf}		{{\bf else}}
+\newcommand{\Do}		{\>\>{\bf do}\'}
+\newcommand{\Return}		{{\bf return} }
+\newcommand{\Comment}		{$\!\rhd$ }
+\newcommand{\Inparallel}	{{\bf in parallel} }	%This should be flushed
+\newcommand{\Goto}		{{\bf goto} }
+\newcommand{\Error}		{{\bf error} } % optionally followed by string argument
+
+\newcommand{\Spawn}		{{\bf spawn} }
+\newcommand{\Sync}		{{\bf sync} }
+
+%% References
+
+\newcommand{\chapref}[1]	{Chapter~\ref{chap:#1}}
+\newcommand{\secref}[1]		{Section~\ref{sec:#1}}
+\newcommand{\secreftwo}[2]	{Sections \ref{sec:#1} and~\ref{sec:#2}}
+\newcommand{\secrefthree}[3]	{Sections \ref{sec:#1}, \ref{sec:#2}, and \ref{sec:#3}}
+\newcommand{\secreffour}[4]	{Sections \ref{sec:#1}, \ref{sec:#2}, \ref{sec:#3}, and~\ref{sec:#4}}
+\newcommand{\appref}[1]		{Appendix~\ref{app:#1}}
+\newcommand{\figref}[1]		{Figure~\ref{fig:#1}}
+\newcommand{\figreftwo}[2]	{Figures \ref{fig:#1} and~\ref{fig:#2}}
+\newcommand{\tabref}[1]		{Table~\ref{tab:#1}}
+\newcommand{\stref}[1]		{Step~\ref{st:#1}}
+\newcommand{\thmref}[1]		{Theorem~\ref{thm:#1}}
+\newcommand{\lemref}[1]		{Lemma~\ref{lem:#1}}
+\newcommand{\lemreftwo}[2]	{Lemmas \ref{lem:#1} and~\ref{lem:#2}}
+\newcommand{\lemrefthree}[3]	{Lemmas \ref{lem:#1}, \ref{lem:#2} and~\ref{lem:#3}}
+\newcommand{\corref}[1]		{Corollary~\ref{cor:#1}}
+\newcommand{\eqref}[1]		{Equation~(\ref{eq:#1})}
+\newcommand{\eqreftwo}[2]	{Equations (\ref{eq:#1}) and~(\ref{eq:#2})}
+\newcommand{\ineqref}[1]	{Inequality~(\ref{ineq:#1})}
+\newcommand{\ineqreftwo}[2]	{Inequalities (\ref{ineq:#1}) and~(\ref{ineq:#2})}
+\newcommand{\invref}[1]		{Invariant~\ref{inv:#1}}
+\newcommand{\defref}[1]		{Definition~\ref{def:#1}}
+\newcommand{\propref}[1]	{Property~\ref{prop:#1}}
+\newcommand{\caseref}[1]	{Case~\ref{case:#1}}
+\newcommand{\casereftwo}[2]	{Cases \ref{case:#1} and~\ref{case:#2}}
+\newcommand{\liref}[1]		{line~\ref{li:#1}}
+\newcommand{\Liref}[1]		{Line~\ref{li:#1}}
+\newcommand{\lirefs}[2]		{lines \ref{li:#1}--\ref{li:#2}}
+\newcommand{\Lirefs}[2]		{Lines \ref{li:#1}--\ref{li:#2}}
+\newcommand{\lireftwo}[2]	{lines \ref{li:#1} and~\ref{li:#2}}
+\newcommand{\lirefthree}[3]	{lines \ref{li:#1}, \ref{li:#2}, and~\ref{li:#3}}
+\newcommand{\exref}[1]		{Exercise~\ref{ex:#1}}
+\newcommand{\princref}[1]	{Principle~\ref{prop:#1}}
+
+%% Macros to typeset problems and exercises
+
+\newcommand{\points}[1]{\hspace{3pt}[#1 points]\hspace{8pt}}
+\newcommand{\parts}[1]{\hspace{3pt}(#1 parts)\hspace{8pt}}
+
+\newcommand{\bparts}{\begin{problemparts}}
+\newcommand{\eparts}{\end{problemparts}}
+\newcommand{\ppart}{\problempart}
+
+\newcommand{\hint}{{\em Hint:\ }}
+
+\newcounter{problemnum}
+\newcommand{\theproblem}{Problem \theproblemsetnum-\arabic{problemnum}}
+\newenvironment{problems}{
+	\begin{list}{{\bf \theproblem. \hspace*{0.5em}}}
+	{\setlength{\leftmargin}{0em}
+	 \setlength{\rightmargin}{0em}
+	 \setlength{\labelwidth}{0em}
+	 \setlength{\labelsep}{0em}
+	 \usecounter{problemnum}}}{\end{list}}
+\makeatletter
+\newcommand{\problem}{\item \let\@currentlabel=\theproblem}
+\makeatother
+
+\newcounter{problempartnum}[problemnum]
+\newenvironment{problemparts}{
+	\begin{list}{{\bf (\alph{problempartnum})}}
+	{\setlength{\leftmargin}{2.5em}
+	 \setlength{\rightmargin}{2.5em}
+	 \setlength{\labelsep}{0.5em}}}{\end{list}}
+\newcommand{\problempart}{\addtocounter{problempartnum}{1}\item}
+
+\newcounter{exercisenum}
+\newcommand{\theexercise}{Exercise \theproblemsetnum-\arabic{exercisenum}}
+\newenvironment{exercises}{
+	\begin{list}{{\bf \theexercise. \hspace*{0.5em}}}
+	{\setlength{\leftmargin}{0em}
+	 \setlength{\rightmargin}{0em}
+	 \setlength{\labelwidth}{0em}
+	 \setlength{\labelsep}{0em}
+	\usecounter{exercisenum}}}{\end{list}}
+\makeatletter
+\newcommand{\exercise}{\item \let\@currentlabel=\theexercise}
+\makeatother
+
+\newcounter{exercisepartnum}[exercisenum]
+
+\newenvironment{exerciseparts}{
+	\begin{list}{{\bf (\alph{exercisepartnum})}}
+	{\setlength{\leftmargin}{2.5em}
+	 \setlength{\rightmargin}{2.5em}
+	 \setlength{\labelsep}{0.5em}}}{\end{list}}
+\newcommand{\exercisepart}{\addtocounter{exercisepartnum}{1}\item}
+
+
+%% Macros to make captions print with small type and 'Figure xx' in bold.
+
+%% New text environments
+
+\newenvironment{closeitemize}
+	{\begin{list}{$\bullet$}
+	{\setlength{\itemsep}{-0.2\baselineskip}
+	 \setlength{\topsep}{0.2\baselineskip}
+	 \setlength{\parskip}{0pt}}}
+	{\end{list}}
+
+\newcounter{ccount}
+
+\newenvironment{closeenum}
+	{\begin{list}{\arabic{ccount}.}
+	{\usecounter{ccount}\setlength{\itemsep}{-0.2\baselineskip}
+	 \setlength{\topsep}{0.2\baselineskip}
+	 \setlength{\parskip}{0pt}}}
+	{\end{list}}
+
+%% Subheadings
+
+\newcommand{\subheading}[1]{\subsubsection*{\boldmath #1 \unboldmath}}
+
+%% Margin notes - use \notesfalse to turn off notes.
+\setlength{\marginparwidth}{0.6in}
+\reversemarginpar
+\newif\ifnotes
+\notestrue
+\newcommand{\longnote}[1]{
+  \ifnotes
+    {\medskip\noindent Note: \marginpar[\hfill$\Longrightarrow$]
+      {$\Longleftarrow$}{#1}\medskip}
+  \fi}
+\newcommand{\note}[1]{
+  \ifnotes
+    {\marginpar{\tiny \raggedright{#1}}}
+  \fi}
+
+
+% \putfig{name}{caption}
+% "name" should be name of figure file minus ".eps" extension.
+% Reference as \figref{name}
+
+\newcommand{\putfig}[2]{
+\begin{figure}[t]
+%\centerline{\mbox{\psfig{figure=#1.eps}}}
+\centerline{\mbox{\includegraphics{#1.eps}}}
+\caption{#2}
+\label{fig:#1}
+\end{figure}
+}
+
+%Environment to restate a theorem with the same number.
+\newenvironment{reftheorem}[1]{\begin{trivlist}\item[\hskip
+\labelsep{\bf Theorem \ref{thm:#1}}]\it}
+{\end{trivlist}}
+
+\newenvironment{reflemma}[1]{\begin{trivlist}\item[\hskip
+\labelsep{\bf Lemma \ref{lem:#1}}]\it}
+{\end{trivlist}}
+
+
+%% Stuff from CLR that I don't understand. -Harald
+%
+%
+%% \psfigures determines what to do for figures:
+%%	0 means just leave vertical space
+%%	1 means put a vertical rule and the figure name
+%%	2 means insert the PostScript version of the figure
+%%	3 means put the figure name flush left or right
+%\newcommand{\psfigures}{0}
+%\newcommand{\spacefigures}{\renewcommand{\psfigures}{0}}
+%\newcommand{\rulefigures}{\renewcommand{\psfigures}{1}}
+%\newcommand{\macfigures}{\renewcommand{\psfigures}{2}}
+%\newcommand{\namefigures}{\renewcommand{\psfigures}{3}}%
+%
+%\newcommand{\figpart}[1]{{\bf (#1)}\nolinebreak[2]\relax}
+%\newcommand{\figparts}[2]{{\bf (#1)--(#2)}\nolinebreak[2]\relax}
+%
+%\macfigures	% STATE%
+%
+%% When calling \figspace, make sure to leave a blank line afterward!!
+%% \widefigspace is for figures that are more than 28pc wide.
+%\newlength{\halffigspace} \newlength{\wholefigspace}
+%\newlength{\figruleheight} \newlength{\figgap}
+%\newcommand{\setfiglengths}{\ifnum\psfigures=1\setlength{\figruleheight}{\hruleheight}\setlength{\figgap}{1em}\else\setlength{\figruleheight}{0pt}\setlength{\figgap}{0em}\fi}
+%\newcommand{\figspace}[2]{\ifnum\psfigures=0\leavefigspace{#1}\else%
+%\setfiglengths%
+%\setlength{\wholefigspace}{#1}\setlength{\halffigspace}{.5\wholefigspace}%
+%\rule[-\halffigspace]{\figruleheight}{\wholefigspace}\hspace{\figgap}#2\fi}
+%\newlength{\widefigspacewidth}
+%% Make \widefigspace put the figure flush right on the text page.
+%\newcommand{\widefigspace}[2]{
+%\ifnum\psfigures=0\leavefigspace{#1}\else%
+%\setfiglengths%
+%\setlength{\widefigspacewidth}{28pc}%
+%\addtolength{\widefigspacewidth}{-\figruleheight}%
+%\setlength{\wholefigspace}{#1}\setlength{\halffigspace}{.5\wholefigspace}%
+%\makebox[\widefigspacewidth][r]{#2\hspace{\figgap}}\rule[-\halffigspace]{\figruleheight}{\wholefigspace}\fi}
+%\newcommand{\leavefigspace}[1]{\setlength{\wholefigspace}{#1}\setlength{\halffigspace}{.5\wholefigspace}\rule[-\halffigspace]{0em}{\wholefigspace}}%
+
+% Commands for including figures with macpsfig.
+% To use these commands, documentstyle ``macpsfig'' must be specified.
+%\newlength{\macfigfill}
+%\makeatother
+%\newlength{\bbx}
+%\newlength{\bby}
+%\newcommand{\macfigure}[5]{\addtocounter{totalart}{1}
+%\ifnum\psfigures=2%
+%\setlength{\bbx}{#2}\addtolength{\bbx}{#4}%
+%\setlength{\bby}{#3}\addtolength{\bby}{#5}%
+%\begin{flushleft}
+%\ifdim#4>28pc\setlength{\macfigfill}{#4}\addtolength{\macfigfill}{-28pc}\hspace*{-\macfigfill}\fi%
+%\mbox{\psfig{figure=./#1.ps,%
+%bbllx=#2,bblly=#3,bburx=\bbx,bbury=\bby}}
+%\end{flushleft}%
+%\else\ifdim#4>28pc\widefigspace{#5}{#1}\else\figspace{#5}{#1}\fi\fi}
+%\makeatletter%
+%
+%\def\@startline{\global\@curtabmar\@nxttabmar\relax
+%   \global\@curtab\@curtabmar\setbox\@curline\hbox
+%    {}\@startfield\global\lifalse\strut}
+%
+%% Sectioning commands.
+%\newcommand{\subsec}[1]{\subsection{\boldmath #1 \unboldmath}}
+%\newcommand{\subheading}[1]{\subsubsection*{\boldmath #1 \unboldmath}}
+%\newcommand{\subsubheading}[1]{\paragraph*{#1}}
+%
+%% This command would be better if it figured out the size
+%\newcommand{\tight}{\renewcommand\baselinestretch{1}\normalsize}
+%
+%\newcommand{\Ts}{T_{{\rm S}}}
+%\newcommand{\Ti}{T_\infty}
+%\newcommand{\threada}{\alpha}
+%\newcommand{\threadb}{\beta}
+%\newcommand{\processor}{P}
+%\newcommand{\cilkv}{\hbox{Cilk-5}}
+
+

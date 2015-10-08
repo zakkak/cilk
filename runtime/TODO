@@ -1,0 +1,33 @@
+Done
+  barrier.c
+  cmdline.c
+  cilk-conf.h
+  move-if-change
+  gcc-builtin.h
+Doing
+Todo
+  cilk.c
+  cilk-cilk2c.h
+  cilk-cilk2c-pre.h
+  cilk-internal.h
+  cilk-lib.h
+  cilk-sysdep.h.in
+  debug.c
+  hooks.c
+  internal-malloc.c
+  invoke-main.c
+  Makefile.am
+  Makefile.in
+  malloc.c
+  mutex.c
+  PROTOCOLS
+  sched.c
+  stamp-h2.in
+  stats.c
+  sysdep.c
+  timing.c
+  workers.c
+
+cilk.h
+ Cilk_internal_malloc from nondeterminator is not called anymore.
+ cilk_fake_lock and stuff need to be defined

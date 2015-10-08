@@ -1,0 +1,157 @@
+% -*-latex-*-
+\chapter{Introduction}
+\addtocounter{footnote}{1}
+
+This document describes \sysnameversion{}, a language for
+multithreaded parallel programming based on ANSI~C\@.  Cilk is
+designed for general-purpose parallel programming, but is especially
+effective for exploiting dynamic, highly asynchronous parallelism,
+which can be difficult to write in data-parallel\index{data-parallel}
+or message-passing style\index{message-passing style}.  Three
+world-class chess programs, $\star$Tech~\cite{Kuszmaul94},
+$\star$Socrates~\cite{JoergKu94}, and Cilkchess, were written in Cilk
+by the Cilk group at MIT.  Cilk provides an effective platform for
+programming dense and sparse numerical algorithms, such as matrix
+factorization~\cite{BlumofeFrJo96a} and $N$-body simulations.  Unlike
+many other multithreaded programming systems, Cilk is algorithmic, in
+that the runtime system employs a scheduler that allows the
+performance of programs to be estimated
+accurately~\cite{BlumofeJoKu95} based on abstract complexity measures.
+
+\section{What is included in {\sysnameversion}?}
+
+This release of Cilk, which is available from
+\texttt{http://supertech.lcs.mit.edu/cilk}, includes the Cilk runtime
+system, the Cilk compiler, a collection of example programs, and this
+manual.
+
+This version of Cilk is intended to run on Unix-like systems that
+support POSIX threads.  In particular, Cilk runs on GNU systems on top
+of the Linux kernel, and it integrates nicely with the Linux
+development tools.  {\sysnameversion} works on Linux/386, Linux/Alpha,
+Linux/IA-64, Solaris/SPARC, Irix/MIPS, OSF/Alpha, and Linux/AMD-64.
+Cilk should also run on other systems, provided that \texttt{gcc},
+POSIX threads, and GNU \texttt{make} are available.  If you would like
+help in porting Cilk to a new platform, please contact the Cilk
+developers by sending electronic mail to
+\texttt{cilk-support@lists.sourceforge.net}.
+
+\section{Background and goals}
+
+Cilk is an algorithmic multithreaded language.  The philosophy behind
+Cilk is that a programmer should concentrate on structuring the
+program to expose parallelism and exploit locality, leaving the
+runtime system with the responsibility of scheduling the computation
+to run efficiently on a given platform.  Thus, the Cilk runtime system
+takes care of details like load balancing, paging, and communication
+protocols.  Unlike other multithreaded languages, however, Cilk is
+algorithmic in that the runtime system guarantees efficient and
+predictable performance.
+
+Cilk grew out of work in both theory and implementation.  The
+theoretical input to Cilk comes from a study of scheduling
+multithreaded computations, and especially of the performance of
+work-stealing, which provided a scheduling model that has since been
+the central theme of Cilk development.  These results led to the
+development of a performance model that accurately predicts the
+efficiency of a Cilk program using two simple parameters:
+\defn{work}\indextiming{work}{} and \defn{span}\indextiming{span}{}
+(also called \defn{critical-path length}~\cite{BlumofeJoKu95,
+BlumofeLe94, Blumofe95}\indextiming{critical path}{}).  More recent
+research has included \defn{cache misses}\index{scheduling!cache
+misses} as a measure of locality~\cite{BlumofeFrJo96b, BlumofeFrJo96a,
+Joerg96}.
+
+The first implementation of Cilk was a direct descendent of
+PCM/Threaded-C, a C-based package which provided
+continuation-passing-style threads on Thinking Machines Corporation's
+Connection Machine Model CM-5 Supercomputer~\cite{LeisersonAbDo92} and
+which used work-stealing as a general scheduling policy to improve the
+load balance and locality of the computation~\cite{HalbherrZhJo94}.
+With the addition of a provably good scheduler and the incorporation
+of many other parallel programming features, the system was
+rechristened ``Cilk-1.''  Among the versions of Cilk-1, notable was an
+adaptively parallel and fault-tolerant network-of-workstations
+implementation, called Cilk-NOW~\cite{Blumofe95,BlumofePa94}.
+
+The next release, Cilk-2, featured full typechecking, supported all of
+ANSI C in its C-language subset, and offered call-return semantics for
+writing multithreaded procedures.  The runtime system was made more
+portable, and the base release included support for several
+architectures other than the CM-5.
+
+Cilk-3 featured an implementation of dag-consistent distributed shared
+memory~\cite{BlumofeFrJo96a,Joerg96}.  With this addition of shared
+memory, Cilk could be applied to solve a much wider class of
+applications.  Dag-consistency is a weak but nonetheless useful
+consistency model, and its relaxed semantics allows for an efficient,
+low overhead, software implementation.
+
+In Cilk-4, the authors of Cilk changed their primary development
+platform from the CM-5 to the Sun Microsystems SPARC SMP\@.  The
+compiler and runtime system were completely reimplemented, eliminating
+continuation passing as the basis of the scheduler, and instead
+embedding scheduling decisions directly into the compiled code.  The
+overhead to spawn a parallel thread in Cilk-4 was typically less than
+3 times the cost of an ordinary C procedure call, so Cilk-4 programs
+``scaled down'' to run on one processor with nearly the efficiency of
+analogous C programs.
+
+In Cilk-5, the runtime system was rewritten to be more flexible and
+portable than in Cilk-4.  Cilk-5.0 could use operating system threads
+as well as processes to implement the individual Cilk ``workers'' that
+schedule Cilk threads.  The Cilk-5.2 release included a debugging tool
+called the Nondeterminator~\cite{FengLe97, ChengFeLe98}, which can
+help Cilk programmers to localize data-race bugs in their code.  (The
+Nondeterminator is not included in the present Cilk-5.3 release.)
+With the current Cilk-5.3 release, Cilk is no longer a research
+prototype, but it attempts to be a real-world tool that can be used by
+programmers who are not necessarily parallel-processing experts.
+Cilk-5.3 is integrated with the \texttt{gcc} compiler, and the runtime
+system runs identically on all platforms.  Many bugs in the Cilk
+compiler were fixed, and the runtime system has been simplified.
+
+To date, prototype applications developed in Cilk include graphics
+rendering (ray tracing and radiosity), protein
+folding~\cite{PandeJoGrTa94}, backtracking search, $N$-body
+simulation, and dense and sparse matrix computations.  Our largest
+application effort so far is a series of chess programs.  One of our
+programs, $\star$Socrates~\cite{JoergKu94}, finished second place in
+the 1995 ICCA World Computer Chess Championship in Hong Kong running
+on the 1824-node Intel Paragon at Sandia National Laboratories in New
+Mexico.  Our most recent program, Cilkchess, is the 1996 Open Dutch
+Computer Chess Champion, winning with 10 out of a possible 11 points.
+Cilkchess ran on a 12 processor 167 MHz UltraSPARC Enterprise 5000 Sun
+SMP with 1 GB of memory.  The MIT Cilk team won First Prize,
+undefeated in all matches, in the ICFP'98 Programming Contest
+sponsored by the 1998 International Conference on Functional
+Programming.\footnote{Cilk is not a functional language, but the
+  contest was open to entries in any programming language.}  We hope
+that by making Cilk available on the new generation of SMP's, other
+researchers will extend the range of problems that can be efficiently
+programmed in Cilk.
+
+The four MIT Ph.D. theses~\cite{Blumofe95,Joerg96,Randall98,Frigo99b}
+contain more detailed descriptions of the foundation and history of
+Cilk.  In addition, the minicourse \cite{LeisersonPr98}, which was
+held as part of MIT's \textit{6.046 Introduction to Algorithms} class
+during Spring 1998, provides a good introduction to the programming of
+multithreaded algorithms using a Cilk-like style.
+
+\section{About this manual}
+
+This manual is primarily intended for users who wish to write Cilk
+application programs.  It also comprises information about
+implementation issues that can be useful when porting Cilk to a new
+system.
+
+The manual is structured as follows.  Chapter~\ref{chap:prog-guide} is
+the programmer's guide, which introduces the features of the Cilk
+language.  Chapter~\ref{chap:lanref} contains the Cilk language
+reference manual.  Chapter~\ref{chap:libref} contains the Cilk library
+reference manual.  Chapter~\ref{chap:impl-notes} describes internals
+of the \sysnameversion{} runtime system and compiler.  This chapter
+should be useful if you are interested in Cilk internals or if you
+want to port Cilk to another platform.
+
+

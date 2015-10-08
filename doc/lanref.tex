@@ -1,0 +1,332 @@
+% -*-latex-*-
+\chapter{Language Reference}
+\index{language reference|(}
+\label{chap:lanref}
+
+This chapter defines the grammar for the Cilk language.  The grammar
+rules are given as additions to the standard ISO C grammar
+(see~\cite[Appendix B]{HarbisonSt95}).
+
+The typographic conventions used in this chapter are the same
+as~\cite{HarbisonSt95}. In particular:
+\begin{itemize}
+\item Typewriter text (\cilkkw{like this}) denotes Cilk keywords
+  or any other text that should be copied verbatim.
+\item Italicized text (\textit{like this}) denotes grammatical
+  classes (things like statements and declarations).
+\item Square brackets (like {\rm [\,]}) denote optional items.
+\end{itemize}
+
+\section{Program structure}
+\indexfn{main@\texttt{main}}{|(}
+
+A Cilk program consists of ordinary ANSI C code plus definitions and
+declarations of Cilk procedures.  A Cilk program contains one special
+Cilk procedure named \cilkkw{main}, which takes the standard C command
+line arguments and returns an integer, just like the C \cilkkw{main}
+function.  At runtime, the \cilkkw{main} procedure is the initial
+procedure invoked from the runtime system, and the one from which all
+subsequent computation ensues.
+
+Within a Cilk program, C code and C functions are used for sequential
+computation.  C functions can be called from Cilk procedures, but Cilk
+procedures cannot be invoked from C
+functions.
+\indexfn{main@\texttt{main}}{|)}
+
+\section{Keywords}\index{keywords|(}
+
+All C keywords are also keywords of Cilk.  In addition, the following
+words have special meaning in Cilk, and thus cannot be used as
+ordinary identifiers in Cilk code:
+\indexkw{cilk}{}
+\indexkw{spawn}{}
+\indexkw{sync}{}
+\indexkw{inlet}{}
+\indexkw{abort}{}
+\indexkw{shared}{}
+\indexkw{private}{}
+\indexkw{SYNCHED}{}
+\begin{syntax}
+\tt cilk, spawn, sync, inlet, abort, shared, private, SYNCHED \\
+\end{syntax}
+The type qualifier \cilkkw{cilk} is used to declare Cilk procedures.
+Similarly, \cilkkw{inlet} is a type qualifier used to declare inlets (see
+Section~\ref{lanref:inlet-sec}).
+
+Ordinary C code is permitted to use Cilk keywords as identifiers if
+one of the following conditions is true:
+\begin{itemize}
+\item The C code appears in a file whose extension is not
+\cilkkw{.cilk} or \cilkkw{.cilkh} (the conventional extensions for
+Cilk source and header files).  The Cilk preprocessor treats files
+without these extensions as straight C.  Thus, standard C header files
+included by a Cilk program may use Cilk reserved words as identifiers.
+
+\index{pragmas!langC@\texttt{lang +/-C}|(textbf}
+\item the C code is preceded by \verb|#pragma lang +C| and followed by
+\verb|#pragma lang -C|.  These directives tell the Cilk preprocessor
+to treat the code between them as straight C\@.  This mechanism can be
+used when C code that contains Cilk keywords as ordinary identifiers
+is found within a Cilk program (\cilkkw{.cilk}) file.
+\end{itemize}
+
+For instance, the following C code uses \cilkkw{sync} as a variable
+name.  It is bracketed by \verb|#pragma lang| directives to prevent
+the preprocessor from issuing syntax errors.
+\begin{verbatim}
+    #pragma lang +C
+    int sync;
+    sync = sync+1;
+    #pragma lang -C
+\end{verbatim}
+\index{pragmas!langC@\texttt{lang +/-C}|)textbf}
+\index{keywords|)}
+
+\section{Procedure definition and declaration}
+
+\indexkw{cilk}{|(textbf}
+Cilk extends ANSI C with constructs to define procedures:
+\begin{syntax}
+declaration{\rm :} & \cilkkw{cilk} \textit{type} \textit{proc} \cilkkw{(}$\mbox{\textit{arg-decl}}_1$,
+             \dots, $\mbox{\textit{arg-decl}}_n$\cilkkw{)} \textit{body} 
+\end{syntax}
+The keyword \cilkkw{cilk} specifies a Cilk procedure definition.  Argument
+declarations follow the ANSI C convention.  When the body of the
+definition is the null statement (\cilkkw{;}), this form is taken to
+be a prototype declaration.  An empty or \cilkkw{void} argument list
+specifies a procedure with no arguments.  Cilk procedure bodies take the
+form of a C compound statement.  Cilk procedure bodies may also contain
+Cilk statements, including procedure \cilkkw{spawn}'s,
+\cilkkw{sync}'s, \cilkkw{inlet} declarations, and other Cilk
+constructs.
+
+A Cilk procedure declaration can be used anywhere an ordinary C
+function declaration can be used. Cilk procedures must be
+\cilkkw{spawn}'ed; they cannot be called like ordinary C functions.
+\indexkw{cilk}{|)textbf}
+
+\section{Spawning}
+\indexkw{spawn}{|(textbf}
+\label{sec:lanref:spawn-sec}
+
+The following Cilk statement forms can be used to spawn Cilk
+procedures to start parallel computations:
+\begin{syntax}
+statement{\rm :} & {\rm [}\textit{lhs} \textit{op}{\rm ]} \cilkkw{spawn} \textit{proc}
+        \cilkkw{(}$\textit{arg}_1$, \dots, $\textit{arg}_n$\cilkkw{)};
+\end{syntax}
+where \textit{op} may be any of the following assignment operators:
+\begin{verbatim}
+     =   *=   /=   %=   +=   -=   <<=   >>=   &=   ^=   |= 
+\end{verbatim}
+These forms are used to spawn Cilk procedures.  The identifier
+\textit{proc} must be defined or declared as a Cilk procedure with the
+correct number and types of arguments for $\textit{arg}_1$, \dots,
+$\textit{arg}_n$.  Normally, the left-hand side \textit{lhs} of
+\textit{op} must be present if and only if \textit{proc} has a
+non-void return type, and \textit{lhs} must have the same type as the
+return type of the procedure.  Similarly, when \textit{op} is
+\cilkkw{+=} or \cilkkw{-=} and the return type of \textit{proc} is an
+integer, \textit{lhs} may be a pointer in order to perform pointer
+arithmetic:
+\begin{verbatim}
+   int  *p;
+   cilk int foo(...);
+
+   p += spawn foo(...);
+\end{verbatim}
+
+A procedure may be spawned even if it is defined in a different source
+file, as long as a prototype for it is in scope.
+
+Arguments passed to spawned procedures or threads can be any valid C
+expression.
+
+Notice that the given syntax specifies a \textit{statement}, not an
+\textit{expression}.  A syntax like
+\begin{verbatim}
+   a = spawn foo() + spawn bar();
+\end{verbatim}
+is invalid in Cilk.
+
+A \cilkkw{spawn} statement can only appear within a Cilk procedure;
+it is invalid in C functions and in inlets.
+
+Unlike C, no assignment conversion is done for the assignment operator
+in a spawn statement, and therefore code such as:
+\begin{verbatim}
+   cilk float foo(void);
+   cilk void bar(void) 
+   {
+     int x;
+     x = spawn foo();
+     sync; 
+   }
+\end{verbatim}
+is invalid in Cilk.  Instead, one must first assign the result to a
+variable of type \cilkkw{float} and then use a regular C assignment to
+convert this variable to an integer.\footnote{We anticipate assignment
+  conversion will be added to the semantics of \cilkkw{spawn} in a
+  future release.}  \indexkw{spawn}{|)textbf}
+
+\section{Returning values}
+\indexkw{return}{|(textbf}
+Within a Cilk procedure,
+\begin{syntax}
+statement{\rm :} & \cilkkw{return} {\rm [}\textit{expr}{\rm ]}\cilkkw{;}
+\end{syntax}
+\noindent can be used to communicate a return value to the spawning procedure,
+with the additional effect of terminating the execution of the current
+procedure. 
+\indexkw{return}{|)textbf}
+
+\section{Synchronization}
+\indexkw{sync}{|(textbf}
+\label{lanref:sync-sec}
+
+Within the body of a Cilk procedure,
+\begin{syntax}
+statement{\rm :} & \cilkkw{sync;}
+\end{syntax}
+\noindent can be used to wait for all child procedures spawned before it in the
+current procedure to return. Typically, it is used to block the
+execution of the current procedure until all return values are
+available:
+\begin{verbatim}
+    x = spawn foo (...);
+    y = spawn bar (...);
+    ...
+    sync;
+    /* values of x, y available */
+\end{verbatim}
+When the procedure resumes, execution starts at the point immediately
+after the \cilkkw{sync} statement.
+
+The \cilkkw{sync} statement has additional meaning for dag-consistent
+shared memory.  The \cilkkw{sync} statement ensures that all writes to shared
+memory performed by the \cilkkw{spawn}'s preceding the \cilkkw{sync} are
+seen by the code after the \cilkkw{sync}.  This natural overloading of
+the \cilkkw{sync} statement for control flow synchronization and data
+synchronization makes dag-consistent shared memory easy to program and
+understand.
+
+A \cilkkw{sync} statement may appear anywhere a statement is allowed
+in a Cilk procedure, including within the clause of an \cilkkw{if}
+statement and in other control constructs.  A \cilkkw{sync} statement
+may not appear in an inlet definition.
+\indexkw{sync}{|)textbf}
+
+\section{Inlet definition}
+\indexkw{inlet}{|(textbf}
+\index{inlets!defining|(}
+\label{lanref:inlet-sec}
+
+An inlet is a piece of code that specifies the actions to be done when
+a spawned procedure returns.  Inlets must be defined in the
+declaration part of a procedure.  An inlet executes atomically with
+respect to the spawning procedure and any other inlets that are
+declared in that procedure.  Thus an inlet behaves as an atomic region
+that can update the parent frame.
+
+An inlet should be defined in the declaration portion of a Cilk procedure:
+\begin{syntax}
+declaration{\rm :} & \cilkkw{inlet} \textit{type} \textit{inlet-name} \cilkkw{(}
+       $\mbox{\textit{arg-decl}}_1$,
+             \dots, $\mbox{\textit{arg-decl}}_n$\cilkkw{)} \textit{body} 
+\end{syntax}
+The keyword \cilkkw{inlet} specifies an inlet definition.
+Argument declarations follow the ANSI C convention.
+
+Inlet bodies take the form of a C compound statement.
+The Cilk statement \cilkkw{abort} and the Cilk variable
+\cilkkw{SYNCHED} are allowed
+in inlet bodies. However, \cilkkw{spawn}, \cilkkw{sync}, and other
+\cilkkw{inlet} declarations are not allowed in inlet bodies.
+The scope of an inlet declaration is limited to the block in which it
+is declared.
+\indexkw{inlet}{|)textbf}
+\index{inlets!defining|)}
+
+\section{Inlet invocation}
+\index{inlets!invoking|(}
+\label{lanref:inletcall-sec}
+
+Within the scope of an inlet declaration, the inlet can be invoked as:
+
+\begin{syntax}
+statement{\rm :} & {\rm [}\textit{lhs} \cilkkw{=}{\rm ]} inlet
+              \cilkkw{(}$\textit{arg}_1$, \dots, $\textit{arg}_n$\cilkkw{)}\cilkkw{;}
+\end{syntax}
+where $\textit{arg}_1$ should be a spawn argument as:
+\note{Does inlet refer to the name of an inlet here?  Perhaps this is
+a poor choice of a name, since \cilkkw{inlet} is also a reserved word
+with another meaning. -- Bruce}
+
+\begin{syntax}
+             \cilkkw{spawn} \textit{proc} \cilkkw{(}$\textit{proc\_arg}_1$, \dots,
+                $\textit{proc\_arg}_m$\cilkkw{)}
+\end{syntax}
+Arguments $\textit{arg}_2$, \dots, $\textit{arg}_n$ of the inlet and
+$\textit{proc\_arg}_1$, \dots, $\textit{proc\_arg}_m$ of the procedure
+\textit{proc} are first evaluated, and then \textit{proc} is invoked
+as in the \cilkkw{spawn} statement (see \secref{lanref:spawn-sec}).
+Control of the calling procedure may resume at the statement after the
+inlet invocation in parallel with the execution of \textit{proc}. When
+\textit{proc} completes execution, \textit{inlet} is invoked with the
+result returned from the spawned procedure, if any, and with its other
+arguments $\textit{arg}_2$, \dots, $\textit{arg}_n$.  Note that
+\textit{inlet} runs in the lexical context of the procedure defining
+\textit{inlet}, and thus it can reference automatic variables in its
+parent procedure.
+
+At least one argument (that is, the first \cilkkw{spawn} argument)
+must be present in an inlet invocation.  If \textit{proc} has a
+non-void return type, the number and types of $\textit{arg}_1$, \dots,
+$\textit{arg}_n$ should match the number and types of \textit{inlet}'s
+formal arguments.  If \textit{proc} has a void return type, the number
+and types of $\textit{arg}_2$, \dots, $\textit{arg}_n$ should match
+the number and types of \textit{inlet}'s formal arguments.  The return
+type of \textit{inlet} should match the type of \textit{lhs}.  The
+value returned by \textit{inlet} will be assigned to \textit{lhs}.  If
+\textit{lhs} is not present, the return type of \textit{inlet} must be
+\cilkkw{void}.
+\index{inlets!invoking|)}
+
+\section{Aborting}
+\indexsub{scheduling}{aborting work}{|(}
+\indexkw{abort}{|(textbf}
+\label{lanref:abort-sec}
+
+Within the body of a Cilk inlet or Cilk procedure,
+\begin{syntax}
+statement{\rm :} & \cilkkw{abort;}
+\end{syntax}
+\noindent can be used to abort the execution of outstanding child procedures.
+The \cilkkw{abort} statement can be used to terminate prematurely
+useless work in a speculative execution.  Any outstanding children may
+be stopped before completion, and any return values or side effects of
+these children may or may not be observed.  \indexkw{abort}{|)textbf}
+\indexsub{scheduling}{aborting work}{|)}
+
+\section{Cilk scheduler variables}
+\index{scheduling!interaction with|(}
+\indexkw{SYNCHED}{|(textbf}
+\label{lanref:synched-sec}
+
+The read-only Cilk scheduler variable \cilkkw{SYNCHED} allows a
+procedure to determine the progress of its spawned child procedures.
+Within a Cilk procedure or inlet, the variable \cilkkw{SYNCHED} can be
+used to test whether any outstanding child procedures exist.  The
+variable \cilkkw{SYNCHED} has the value 1 if the scheduler can
+guarantee that there are no outstanding child procedures, and 0
+otherwise.  If \cilkkw{SYNCHED} has value 1, the scheduler also
+guarantees that all memory operations of all spawned children have
+completed as well.  Because these memory operations may take a long
+time to complete in some Cilk implementations, \cilkkw{SYNCHED} may
+have value 0 even though all spawned children have finished executing.
+
+The variable \cilkkw{SYNCHED} may only appear within a Cilk procedure
+or inlet and may not be used within C functions.
+\indexkw{SYNCHED}{|)textbf}
+\index{scheduling!interaction with|)}

@@ -1,0 +1,31 @@
+\begin{verbatim}
+struct _fib_frame {
+  StackFrame header;
+  struct {int n;} scope0;
+  struct {int x;int y;} scope1;
+};
+int fib(int n)
+{
+  struct _fib_frame *_frame;
+  _INIT_FRAME(_frame,sizeof(struct _fib_frame),_fib_sig);
+  {
+    if (n < 2) 
+      {_BEFORE_RETURN_FAST();return (n);}
+    else {
+      int x;int y;
+      { _frame->header.entry=1;
+        _frame->scope0.n=n;
+        x=fib(n-1);
+        _XPOP_FRAME_RESULT(_frame,0,x);
+      }
+      { _frame->header.entry=2;
+        _frame->scope1.x=x;
+        y=fib(n-2);
+        _XPOP_FRAME_RESULT(_frame,0,y);
+      }
+      /* sync */;
+      {_BEFORE_RETURN_FAST();return (x+y);}
+    }
+  }
+}
+\end{verbatim}

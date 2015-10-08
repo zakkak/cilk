@@ -1,0 +1,245 @@
+% -*-latex-*-
+
+\chapter{Specification of Cilk Libraries}
+\index{Cilk libraries|(}
+\label{chap:libref}
+
+This chapter describes variables and functions that the Cilk system
+exports, and that may be used by Cilk programs.  The Cilk library
+provides locks, debug support, timing functions, and replacement for C
+functions that are known not to be thread-safe.
+
+To use the features described in this chapter, a program must include
+\texttt{cilk-lib.h}\indexhf{cilklibh@\texttt{cilk-lib.h}}{}.
+
+In addition to these variables and functions, the Cilk system also
+exports \texttt{Cilk\_init} and \texttt{Cilk\_terminate}, for use
+by C functions that need to call Cilk stubs. These functions were
+explained in \secref{cilk-c}.
+
+\section{Global variables}
+\label{sec:variables}
+\begin{verbatim}
+extern int Cilk_active_size;
+\end{verbatim}
+\begin{description}
+\item[{\bf meaning:}]  The variable \texttt{Cilk\_active\_size} is a
+read-only variable that specifies how many processes \note{Should this
+be processors? -- Bruce} Cilk is running
+on.  The user may set this variable only by using the \texttt{--nproc}
+command-line option (see \secref{compile-run}).
+
+\item[{\bf default:}]  This variable defaults to 1 (one processor).
+\end{description}
+\indexvar{Cilkactivesize@\texttt{Cilk\_active\_size}}{|)textbf}
+
+\begin{verbatim}
+extern int Self;
+\end{verbatim}
+\begin{description}
+\item[{\bf meaning:}]  The read-only variable \texttt{Self} specifies the
+current processor number.  It is guaranteed to be between 0 and {\tt
+Cilk\_active\_size}-1.
+\end{description}
+
+\section{Shared memory support}
+\label{sec:lib-alloca}
+For allocating stack memory dynamically, the following primitive is
+available:
+\begin{verbatim}
+    void *Cilk_alloca(size_t size);
+\end{verbatim}
+This primitive returns a pointer to a block of \cilkkw{size} bytes.
+Memory returned by \cilkkw{Cilk\_alloca} is automatically freed at the
+end of the current Cilk procedure or C function, depending on where
+\cilkkw{Cilk\_alloca} is called.
+
+[\textbf{Implementation note:} The current implementation of
+\cilkkw{Cilk\_alloca} is problematic.  It works fine within Cilk
+procedures, but not inside C functions.  Memory allocated with
+\cilkkw{Cilk\_alloca} inside a C function is not automatically freed
+at the end of the function, and will persist until its parent Cilk
+procedure exits.]
+\indexfn{Cilkalloca@\texttt{Cilk\_alloca}}{|)}
+
+\section{Debug support}
+Cilk supports the following macro, analogous to \texttt{assert}.
+\begin{verbatim}
+Cilk_assert(expression)
+\end{verbatim}
+\begin{description}
+\item[{\bf meaning:}] \texttt{Cilk\_assert()} is a macro that
+indicates \texttt{expression} is expected to be true at this point in
+the program.  If \texttt{expression} is false (0), it displays
+\texttt{expression} on the standard error with its line number and
+file name, and then terminates the program and dumps core.  Compiling
+with the preprocessor option \texttt{-DNDEBUG}, or with the
+preprocessor control statement \texttt{\#define NDEBUG} in the
+beginning of the program, will stop assertions from being compiled
+into the program.
+\end{description}
+\indexmac{Cilkassert@\texttt{Cilk\_assert}}{|)textbf}
+
+\section{Locks}
+\label{sec:lanref:locks}
+\index{locks!using|(}
+\indextype{Cilklockvar@\texttt{Cilk\_lockvar}}{|(}
+\indexfn{Cilklockinit@\texttt{Cilk\_lock\_init}}{|(}
+\indexfn{Cilklock@\texttt{Cilk\_lock}}{|(}
+\indexfn{Cilkunlock@\texttt{Cilk\_unlock}}{|(}
+
+In Cilk, locks are sometimes required for mutual exclusion or to
+strengthen the memory model. Cilk locks are declared as type
+\texttt{Cilk\_lockvar}.  The following statements are available
+operations on lock variables:
+
+\begin{description}
+
+\item[\texttt{Cilk\_lock\_init(Cilk\_lockvar l)}] Initialize a lock variable.
+Must be called before any other lock operations are used on the lock.
+
+\item[\texttt{Cilk\_lock(Cilk\_lockvar l)}] Attempt to acquire lock \texttt{l}
+and block if unable to do so.
+
+\item[\texttt{Cilk\_unlock(Cilk\_lockvar l)}] Release lock \texttt{l}.
+\end{description}
+
+\indexfn{Cilkunlock@\texttt{Cilk\_unlock}}{|)}
+\indexfn{Cilklock@\texttt{Cilk\_lock}}{|)}
+\indexfn{Cilklockinit@\texttt{Cilk\_lock\_init}}{|)}
+\indextype{Cilklockvar@\texttt{Cilk\_lockvar}}{|)}
+
+Cilk's locks are implemented to be as fast as is supported by the
+underlying hardware while still supporting release consistency
+\cite[p.~716]{HennessyPa96}. \note{We might say a word or two about
+what release consistency is. -- Bruce}
+
+\index{deadlock|(}
+
+Along with the advantages of locks come some disadvantages.  The most
+serious disadvantage of locks is that a deadlock might occur, if there
+is a cyclic dependence among locks.  Deadlocks often arise from tricky
+nondeterministic programming bugs, and {\em the Cilk system contains
+  no provisions for deadlock detection or avoidance}.  Although this
+manual is not the place for a complete tutorial on deadlock avoidance,
+a few words would be prudent.
+
+The simplest way to avoid deadlock in a Cilk program is to hold only
+one lock at a time.  Unless a program contends for one lock while at
+the same time holding another lock, deadlock cannot occur.
+
+If more than one lock needs to be held simultaneously, more
+complicated protocols are necessary.  One way to avoid deadlocks is to
+define some global order on all locks in a program, and then acquire
+locks only in that order.  For instance, if you need to lock several
+entries in a linked list simultaneously, always locking them in list
+order will guarantee deadlock freedom.  Memory order (as defined by
+pointer comparison) can often serve as a convenient global order.
+
+If a program cannot be arranged such that locks are always acquired in
+some global order, deadlock avoidance becomes harder.  In general, it
+is a computationally intractable problem to decide whether a given
+program is deadlock-free.  Even if the user can guarantee that his
+program is deadlock-free, Cilk may still deadlock on the user's code
+because of some additional scheduling constraints imposed by Cilk's
+scheduler.  Additional constraints on the structure of lock-unlock
+pairs are required to make sure that all deadlock-free programs will
+execute in a deadlock-free fashion with the Cilk scheduler.  These
+additional constraints are as follows.  First, each lock and its
+corresponding unlock must be in the same Cilk procedure.  Thus, you
+cannot unlock a lock that your parent or child procedure locked.
+Second, every unlock must either follow its corresponding lock with no
+intervening \texttt{spawn} statements, or follow a \texttt{sync} with
+no intervening \texttt{spawn} statements.  With these two additional
+constraints, Cilk will execute any deadlock-free program in a
+deadlock-free manner.
+
+\index{deadlock|)}
+\index{atomicity|(}
+\indexrace{|(}
+
+Locking can be dangerous even if deadlock is not a possibility.  For
+instance, if a lock is used to make the update of a counter atomic,
+the user must guarantee that {\em every} access to that counter first
+acquires the lock.  A single unguarded access to the counter can cause
+a \emph{data race}, where the counter update does not appear atomic
+because some access to it is unguarded. 
+
+\section{Timers}
+\label{sec:timers}
+
+Cilk provides timers to measure the work and span of a computation as
+it runs.  The overall work and span of a computation can be printed
+out automatically, as is described in \secref{compile-run}.
+Sometimes, however, it is useful to measure work and span for
+subcomputations.  This section describes such a timer interface.  The
+interface is not particularly elegant right now, but with care, the
+work and span of subcomputations can be accurately measured.
+
+\index{Makefile@\texttt{Makefile}!options} The type
+\texttt{Cilk\_time} contains a (hopefully platform-independent) Cilk
+time measure.  The Cilk runtime system updates the variables
+\texttt{Cilk\_user\_critical\_path} and \texttt{Cilk\_user\_work} at
+thread boundaries when the user code is compiled with the
+\texttt{-cilk-critical-path} flag.  These variables are stored using
+Cilk-internal time units.  The function \texttt{Cilk\_time\_to\_sec()}
+converts the Cilk-internal units into seconds.
+
+The normal way to determine the work or span of a subcomputation is to
+take a reading of \texttt{Cilk\_user\_critical\_path} or
+\texttt{Cilk\_user\_work} before the subcomputation, take another
+reading after the subcomputation, and subtract the first reading from
+the second.  Because these variables are only updated at thread
+boundaries, however, reliable timings can only be obtained in general
+if they are read at the beginning of a procedure or immediately after
+a \cilkkw{sync}.  Reading them at other times may yield innaccurate
+values.
+
+In addition to work and span, the function
+\texttt{Cilk\_get\_wall\_time()} returns the current wall-clock time
+in Cilk-internal wall-clock units. The wall-clock units are not
+necessarily the same as the work and span units.  The
+function \texttt{Cilk\_wall\_time\_to\_sec()} converts the
+Cilk-internal units into seconds.
+
+Here is an example usage.
+
+\begin{verbatim}
+     Cilk_time tm_begin, tm_elapsed;
+     Cilk_time wk_begin, wk_elapsed;
+     Cilk_time cp_begin, cp_elapsed;
+
+     /* Timing. "Start" timers */
+     sync;
+     cp_begin = Cilk_user_critical_path;
+     wk_begin = Cilk_user_work;
+     tm_begin = Cilk_get_wall_time();
+  
+     spawn cilksort(array, tmp, size);
+     sync; 
+
+     /* Timing. "Stop" timers */
+     tm_elapsed = Cilk_get_wall_time() - tm_begin;
+     wk_elapsed = Cilk_user_work - wk_begin;
+     cp_elapsed = Cilk_user_critical_path - cp_begin;
+ 
+     printf("\nCilk Example: cilksort\n");
+     printf("          running on %d processor(s)\n\n", Cilk_active_size);
+     printf("options: number of elements = %ld\n\n", size);
+     printf("Running time  = %4f s\n", Cilk_wall_time_to_sec(tm_elapsed));
+     printf("Work          = %4f s\n", Cilk_time_to_sec(wk_elapsed));
+     printf("Span          = %4f s\n\n", Cilk_time_to_sec(cp_elapsed));
+\end{verbatim}
+\indextimingnest{span}{|)}
+\indextimingnest{critical path}{|)}
+\indextimingnest{work}{|)}
+\indextim{|)}
+\indexfn{Cilkwalltimetosec@\texttt{Cilk\_wall\_time\_to\_sec}}{|)textbf}
+\indexfn{Cilkgetwalltime@\texttt{Cilk\_get\_wall\_time}}{|)textbf}
+\indexfn{Cilktimetosec@\texttt{Cilk\_time\_to\_sec}}{|)textbf}
+\indexopt{CILKCRITICALPATH@\texttt{CILK\_CRITICAL\_PATH}}{|)textbf}
+\indexvar{Cilkuserwork@\texttt{Cilk\_user\_work}}{|)textbf}
+\indexvar{Cilkusercriticalpath@\texttt{Cilk\_user\_critical\_path}}{|)textbf}
+\indextype{Cilktime@\texttt{Cilk\_time}}{|)textbf}
+
+

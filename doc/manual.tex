@@ -1,0 +1,102 @@
+% -*-latex-*-
+\documentclass[11pt,twoside]{report} 
+\usepackage{ifthen}
+\usepackage{epsfig}
+
+% Macro definitions.
+\input{version}
+\input{defs}
+\usepackage{supertech}
+
+%
+% Use \notestrue to enable margin comments. For generating
+% the manual, set \notesfalse
+%
+%\notesfalse
+\notesfalse
+
+%\note{The standard page layout looks better to me (especially at twoside)
+%--- athena}
+
+% Page layout.
+%\oddsidemargin  .5   in
+%\evensidemargin 0   in
+%\topmargin     -0.5 in
+%\textwidth      6 in
+%\textheight     8.8 in
+
+\begin{document}
+
+
+% Title.
+\begin{titlepage}
+
+\begin{center}
+\vspace*{4cm}
+{\huge
+\textbf{\sysnameversion{}\\[.5cm]
+Reference Manual}}\\[.8cm]
+
+{\large
+Supercomputing Technologies Group\\
+MIT Laboratory for Computer Science\\[.3cm]
+\texttt{http://supertech.lcs.mit.edu/cilk}\\[.6cm]
+}
+
+\vfill
+\hrule
+\vspace{.4cm}
+{\small Cilk is a trademark of the Massachusetts Institute of
+Technology.\\
+The Cilk project is supported in part by NSF Grant E1A-9975036.
+Previous support was provided in part by DARPA Grant
+F30602-97-1-0270.\\
+This manual is Copyright \copyright{} 1998 Massachusetts Institute of
+Technology.}
+\end{center}
+\end{titlepage}
+
+\doclearpage
+
+\pagestyle{headings}
+
+
+\pagenumbering{roman}
+
+
+% Preface: Release notes
+\addcontentsline{toc}{chapter}{Release Notes}
+\input{misc.tex}
+\cleardoublepage
+
+
+% Table of contents.
+\tableofcontents
+\cleardoublepage
+
+\pagenumbering{arabic} 
+
+
+\input{intro.tex}
+
+\input{prog-guide.tex}
+
+\input{lanref.tex}
+
+\input{library-spec.tex}
+
+\input{impl-notes.tex}
+
+\cleardoublepage
+
+\appendix
+
+\input{people.tex}
+\input{copyright}
+
+\nocite{Blumofe92}
+\bibliographystyle{plain}
+\bibliography{cilk}
+
+\end{document}
+

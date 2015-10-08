@@ -1,0 +1,685 @@
+2002-05-15  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/support/Makefile.am,
+	/cvsroot/cilk/cilk/support/cilk.in,
+	/cvsroot/cilk/cilk/support/make-specs.pl: Allow for spaces in
+	pathnames
+
+2002-05-14  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/runtime/Makefile.am: Fix version-info
+
+	* /cvsroot/cilk/cilk/configure.ac: Update AC_PREREQ
+
+	* /cvsroot/cilk/cilk/doc/misc.tex: Added release notes
+
+	* /cvsroot/cilk/cilk/ChangeLog, /cvsroot/cilk/cilk/configure.ac:
+	Updated for 5.3.2rc1 release
+
+	* /cvsroot/cilk/cilk/cilk2c/ANSI-C.y: Fixed missing semicolons.
+
+2002-03-03  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/configure.ac: minor fixes
+
+2002-03-02  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/configure.ac: Added missing header files
+
+	* /cvsroot/cilk/cilk/configure.ac,
+	/cvsroot/cilk/cilk/configure.in: Renamed for compatibility with
+	debian and autoconf >= 2.50
+
+2002-03-01  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/cilk2c/ANSI-C.y: Forgot semicolon.  For some
+	reason, it worked with bison but not yacc.
+
+	* /cvsroot/cilk/cilk/ChangeLog, /cvsroot/cilk/cilk/THANKS: Updated
+	ChangeLog, THANKS
+
+	* /cvsroot/cilk/cilk/NEWS: *** empty log message ***
+
+	* /cvsroot/cilk/cilk/cilk2c/initializer.c,
+	/cvsroot/cilk/cilk/cilk2c/list.c,
+	/cvsroot/cilk/cilk/cilk2c/list.h,
+	/cvsroot/cilk/cilk/cilk2c/sem-check.c,
+	/cvsroot/cilk/cilk/cilk2c/type.c,
+	/cvsroot/cilk/cilk/cilk2c/type.h: Allow flexible arrays in struct
+	declarations
+
+2001-11-09  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/AUTHORS, /cvsroot/cilk/cilk/THANKS,
+	/cvsroot/cilk/cilk/doc/manual.tex: Reference new DARPA contract
+
+2001-11-01  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/support/make-specs.pl: Remove -g from
+	preprocessor invocation, as this fails on redhat 7.2
+
+2001-10-04  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/runtime/cilk-sysdep.h.in: Fixed incorrect
+	memory barriers on sparc v8
+
+2001-10-03  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/examples/Makefile.am: Prevent automake
+	warning
+
+	* /cvsroot/cilk/cilk/examples/Makefile.am: Fixed for automake 1.4h
+
+2001-06-27  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/cilk2c/ANSI-C.y,
+	/cvsroot/cilk/cilk/cilk2c/c4.l: Fixed obscure bug that causes core
+	dump when an unrecognized #pragma precedes an old-style function
+	declaration.
+
+2001-06-03  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/runtime/cilk-cilk2c.h: Eliminated implicit
+	confusion between `f' and `_cilk_frame' in CILK2C_PUSH_FRAME
+
+2001-05-22  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/examples/Makefile.am,
+	/cvsroot/cilk/cilk/examples/test-errno.cilk,
+	/cvsroot/cilk/cilk/examples/test-locks.cilk: Added test-errno .
+
+	* /cvsroot/cilk/cilk/support/make-specs.pl: Compile with
+	-D_REENTRANT for systems that require it.
+
+	* /cvsroot/cilk/cilk/configure.in,
+	/cvsroot/cilk/cilk/runtime/cilk.h: Updated for autoconf-2.50
+
+2001-04-02  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/support/make-specs.pl: Do not link cilk
+	libraries when -nostdlib is given
+
+	* /cvsroot/cilk/cilk/support/make-specs.pl: Add %G at the end of
+	*lib (needed by MacOS X)
+
+	* /cvsroot/cilk/cilk/NEWS, /cvsroot/cilk/cilk/examples/plu.cilk:
+	Avoid drand48()
+
+	* /cvsroot/cilk/cilk/examples/cholesky.cilk,
+	/cvsroot/cilk/cilk/examples/lu.cilk: Don't use drand48() and avoid
+	portability troubles
+
+	* /cvsroot/cilk/cilk/support/Makefile.am,
+	/cvsroot/cilk/cilk/support/make-specs.pl,
+	/cvsroot/cilk/cilk/acinclude.m4, /cvsroot/cilk/cilk/configure.in:
+	Automatically detect cc1/cc1obj cand cpp/cpp0
+
+	* /cvsroot/cilk/cilk/runtime/cilk-sysdep.h.in: Check for __ppc__
+	as well as __powerpc__
+
+2001-03-26  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/support/make-specs.pl: Undone previous patch
+
+	* /cvsroot/cilk/cilk/support/make-specs.pl: Use -x c instead of
+	-lang-c when invoking preprocessor. (Thanks Geoffrey Irving)
+
+2001-02-01  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/cilk2c/ANSI-C.y: Remove duplicate type
+	declaration of EXTENSION in cilk2c/ANSI-C.y, as this breaks SVR4
+	yacc.  (Thanks Simone Severini.)
+
+2001-01-22  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/runtime/cilk-cilk2c-pre.h,
+	/cvsroot/cilk/cilk/runtime/cilk-conf.h,
+	/cvsroot/cilk/cilk/runtime/cilk-internal.h,
+	/cvsroot/cilk/cilk/runtime/cilk.c,
+	/cvsroot/cilk/cilk/runtime/cilk.h,
+	/cvsroot/cilk/cilk/runtime/internal-malloc.c,
+	/cvsroot/cilk/cilk/runtime/mutex.c,
+	/cvsroot/cilk/cilk/runtime/sched.c,
+	/cvsroot/cilk/cilk/runtime/stats.c,
+	/cvsroot/cilk/cilk/runtime/timing.c: DEFINE_PARAMETER with 3
+	arguments is obsolete.  (In fact, the whole DEFINE_PARAMETER
+	concept is obsolete.)
+
+2000-12-28  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/cilk2c/ANSI-C.y: Restored redhat 7
+	compatibility.
+
+2000-12-24  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/cilk2c/ANSI-C.y,
+	/cvsroot/cilk/cilk/runtime/cilk-conf.h,
+	/cvsroot/cilk/cilk/runtime/cilk.h,
+	/cvsroot/cilk/cilk/configure.in: Fixed some shift/reduce conflicts
+	in grammar.  May not work on redhat-7.0 anymore---check this.
+
+2000-12-08  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/NEWS, /cvsroot/cilk/cilk/configure.in,
+	/cvsroot/cilk/cilk/runtime/Makefile.am,
+	/cvsroot/cilk/cilk/runtime/cilk-cilk2c-pre.h,
+	/cvsroot/cilk/cilk/runtime/cilk-internal.h,
+	/cvsroot/cilk/cilk/runtime/cilk.h,
+	/cvsroot/cilk/cilk/runtime/internal-malloc.c,
+	/cvsroot/cilk/cilk/runtime/sched.c: Fixed memory leak in runtime
+	system
+
+	* /cvsroot/cilk/cilk/ANNOUNCE, /cvsroot/cilk/cilk/NEWS,
+	/cvsroot/cilk/cilk/doc/misc.tex,
+	/cvsroot/cilk/cilk/runtime/internal-malloc.c: Removed old
+	distinction between global and local free list in
+	internal-malloc.c
+
+2000-12-07  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/ChangeLog: Updated
+
+2000-11-07  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/NEWS, /cvsroot/cilk/cilk/configure.in:
+	Updated NEWS file and version number to 5.3.1
+
+	* /cvsroot/cilk/cilk/cilk2c/ANSI-C.y,
+	/cvsroot/cilk/cilk/configure.in,
+	/cvsroot/cilk/cilk/support/Makefile.am,
+	/cvsroot/cilk/cilk/support/make-specs.pl: Patched to work on
+	redhat-7.0
+
+2000-09-21  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/runtime/cilk-sysdep.h.in: Fixed potential
+	overflow in time computation.
+
+2000-08-27  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/NEWS,
+	/cvsroot/cilk/cilk/cilk2c/conversions.c,
+	/cvsroot/cilk/cilk/cilk2c/main.c,
+	/cvsroot/cilk/cilk/cilk2c/sem-check.c,
+	/cvsroot/cilk/cilk/cilk2c/transform.c: Force inlet call arguments
+	to have the same type as formals.  (Doing conversions right is too
+	messy.)
+
+2000-06-24  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/doc/Makefile.am,
+	/cvsroot/cilk/cilk/doc/cactus.pdf,
+	/cvsroot/cilk/cilk/doc/defs.tex,
+	/cvsroot/cilk/cilk/doc/fib-closures.eps,
+	/cvsroot/cilk/cilk/doc/model.pdf,
+	/cvsroot/cilk/cilk/doc/prog-guide.tex: Produce PDF output in
+	addition to postscript.
+
+2000-06-22  matley  <matley@glauke>
+
+	* /cvsroot/cilk/cilk/support/automake-cilk,
+	/cvsroot/cilk/cilk/support/cilk.in,
+	/cvsroot/cilk/cilk/support/cilk.m4,
+	/cvsroot/cilk/cilk/support/dotemacs.el,
+	/cvsroot/cilk/cilk/support/make-specs.pl: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/support/automake-cilk,
+	/cvsroot/cilk/cilk/support/cilk.in,
+	/cvsroot/cilk/cilk/support/cilk.m4,
+	/cvsroot/cilk/cilk/support/dotemacs.el,
+	/cvsroot/cilk/cilk/support/make-specs.pl: New file.
+
+	* /cvsroot/cilk/cilk/runtime/timing.c,
+	/cvsroot/cilk/cilk/runtime/workers.c,
+	/cvsroot/cilk/cilk/support/Makefile.am: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/timing.c,
+	/cvsroot/cilk/cilk/runtime/workers.c,
+	/cvsroot/cilk/cilk/support/Makefile.am: New file.
+
+	* /cvsroot/cilk/cilk/runtime/stats.c,
+	/cvsroot/cilk/cilk/runtime/sysdep.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/stats.c,
+	/cvsroot/cilk/cilk/runtime/sysdep.c: New file.
+
+	* /cvsroot/cilk/cilk/runtime/sched.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/sched.c: New file.
+
+	* /cvsroot/cilk/cilk/runtime/mutex.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/mutex.c: New file.
+
+	* /cvsroot/cilk/cilk/runtime/internal-malloc.c,
+	/cvsroot/cilk/cilk/runtime/invoke-main.c,
+	/cvsroot/cilk/cilk/runtime/malloc.c,
+	/cvsroot/cilk/cilk/runtime/move-if-change: Initial Cilk import
+	into sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/internal-malloc.c,
+	/cvsroot/cilk/cilk/runtime/invoke-main.c,
+	/cvsroot/cilk/cilk/runtime/malloc.c,
+	/cvsroot/cilk/cilk/runtime/move-if-change: New file.
+
+	* /cvsroot/cilk/cilk/runtime/cmdline.c,
+	/cvsroot/cilk/cilk/runtime/debug.c,
+	/cvsroot/cilk/cilk/runtime/gcc-builtin.h,
+	/cvsroot/cilk/cilk/runtime/hooks.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/cmdline.c,
+	/cvsroot/cilk/cilk/runtime/debug.c,
+	/cvsroot/cilk/cilk/runtime/gcc-builtin.h,
+	/cvsroot/cilk/cilk/runtime/hooks.c: New file.
+
+	* /cvsroot/cilk/cilk/runtime/cilk.h,
+	/cvsroot/cilk/cilk/runtime/cilkrt0.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/cilk.h,
+	/cvsroot/cilk/cilk/runtime/cilkrt0.c: New file.
+
+	* /cvsroot/cilk/cilk/runtime/cilk-sysdep.h.in,
+	/cvsroot/cilk/cilk/runtime/cilk.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/cilk-sysdep.h.in,
+	/cvsroot/cilk/cilk/runtime/cilk.c: New file.
+
+	* /cvsroot/cilk/cilk/runtime/cilk-conf.h,
+	/cvsroot/cilk/cilk/runtime/cilk-internal.h,
+	/cvsroot/cilk/cilk/runtime/cilk-lib.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/cilk-conf.h,
+	/cvsroot/cilk/cilk/runtime/cilk-internal.h,
+	/cvsroot/cilk/cilk/runtime/cilk-lib.h: New file.
+
+	* /cvsroot/cilk/cilk/runtime/cilk-cilk2c-pre.h,
+	/cvsroot/cilk/cilk/runtime/cilk-cilk2c.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/runtime/cilk-cilk2c-pre.h,
+	/cvsroot/cilk/cilk/runtime/cilk-cilk2c.h: New file.
+
+	* /cvsroot/cilk/cilk/examples/testall.cilk,
+	/cvsroot/cilk/cilk/runtime/Makefile.am,
+	/cvsroot/cilk/cilk/runtime/PROTOCOLS,
+	/cvsroot/cilk/cilk/runtime/barrier.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/examples/testall.cilk,
+	/cvsroot/cilk/cilk/runtime/Makefile.am,
+	/cvsroot/cilk/cilk/runtime/PROTOCOLS,
+	/cvsroot/cilk/cilk/runtime/barrier.c: New file.
+
+	* /cvsroot/cilk/cilk/examples/plu.cilk,
+	/cvsroot/cilk/cilk/examples/queens.cilk,
+	/cvsroot/cilk/cilk/examples/rand.cilk,
+	/cvsroot/cilk/cilk/examples/test-locks.cilk: Initial Cilk import
+	into sourceforge
+
+	* /cvsroot/cilk/cilk/examples/plu.cilk,
+	/cvsroot/cilk/cilk/examples/queens.cilk,
+	/cvsroot/cilk/cilk/examples/rand.cilk,
+	/cvsroot/cilk/cilk/examples/test-locks.cilk: New file.
+
+	* /cvsroot/cilk/cilk/examples/magic.cilk,
+	/cvsroot/cilk/cilk/examples/matmul.cilk,
+	/cvsroot/cilk/cilk/examples/nfib.cilk: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/examples/magic.cilk,
+	/cvsroot/cilk/cilk/examples/matmul.cilk,
+	/cvsroot/cilk/cilk/examples/nfib.cilk: New file.
+
+	* /cvsroot/cilk/cilk/examples/lu.cilk: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/examples/lu.cilk: New file.
+
+	* /cvsroot/cilk/cilk/examples/knapsack.cilk: Initial Cilk import
+	into sourceforge
+
+	* /cvsroot/cilk/cilk/examples/knapsack.cilk: New file.
+
+	* /cvsroot/cilk/cilk/examples/kalah.cilk,
+	/cvsroot/cilk/cilk/examples/knapsack-example1.input,
+	/cvsroot/cilk/cilk/examples/knapsack-example2.input,
+	/cvsroot/cilk/cilk/examples/knapsack-example3.input: Initial Cilk
+	import into sourceforge
+
+	* /cvsroot/cilk/cilk/examples/kalah.cilk,
+	/cvsroot/cilk/cilk/examples/knapsack-example1.input,
+	/cvsroot/cilk/cilk/examples/knapsack-example2.input,
+	/cvsroot/cilk/cilk/examples/knapsack-example3.input: New file.
+
+	* /cvsroot/cilk/cilk/examples/heat.cilk,
+	/cvsroot/cilk/cilk/examples/hello.cilk: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/examples/heat.cilk,
+	/cvsroot/cilk/cilk/examples/hello.cilk: New file.
+
+	* /cvsroot/cilk/cilk/examples/game.cilk,
+	/cvsroot/cilk/cilk/examples/getoptions.c,
+	/cvsroot/cilk/cilk/examples/getoptions.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/examples/game.cilk,
+	/cvsroot/cilk/cilk/examples/getoptions.c,
+	/cvsroot/cilk/cilk/examples/getoptions.h: New file.
+
+	* /cvsroot/cilk/cilk/examples/fft.cilk,
+	/cvsroot/cilk/cilk/examples/fib-serial.c,
+	/cvsroot/cilk/cilk/examples/fib.cilk: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/examples/fft.cilk,
+	/cvsroot/cilk/cilk/examples/fib-serial.c,
+	/cvsroot/cilk/cilk/examples/fib.cilk: New file.
+
+	* /cvsroot/cilk/cilk/examples/cilksort.cilk,
+	/cvsroot/cilk/cilk/examples/ck.cilk: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/examples/cilksort.cilk,
+	/cvsroot/cilk/cilk/examples/ck.cilk: New file.
+
+	* /cvsroot/cilk/cilk/examples/cholesky.cilk: Initial Cilk import
+	into sourceforge
+
+	* /cvsroot/cilk/cilk/examples/cholesky.cilk: New file.
+
+	* /cvsroot/cilk/cilk/examples/bucket.cilk: Initial Cilk import
+	into sourceforge
+
+	* /cvsroot/cilk/cilk/examples/bucket.cilk: New file.
+
+	* /cvsroot/cilk/cilk/doc/supertech.sty,
+	/cvsroot/cilk/cilk/doc/version.tex.in,
+	/cvsroot/cilk/cilk/examples/Makefile.am: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/doc/supertech.sty,
+	/cvsroot/cilk/cilk/doc/version.tex.in,
+	/cvsroot/cilk/cilk/examples/Makefile.am: New file.
+
+	* /cvsroot/cilk/cilk/doc/prog-guide.tex: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/doc/prog-guide.tex: New file.
+
+	* /cvsroot/cilk/cilk/doc/model.eps,
+	/cvsroot/cilk/cilk/doc/model.fig,
+	/cvsroot/cilk/cilk/doc/people.tex: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/doc/model.eps,
+	/cvsroot/cilk/cilk/doc/model.fig,
+	/cvsroot/cilk/cilk/doc/people.tex: New file.
+
+	* /cvsroot/cilk/cilk/doc/local-texi2dvi,
+	/cvsroot/cilk/cilk/doc/manual.tex,
+	/cvsroot/cilk/cilk/doc/misc.tex: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/doc/local-texi2dvi,
+	/cvsroot/cilk/cilk/doc/manual.tex,
+	/cvsroot/cilk/cilk/doc/misc.tex: New file.
+
+	* /cvsroot/cilk/cilk/doc/library-spec.tex: Initial Cilk import
+	into sourceforge
+
+	* /cvsroot/cilk/cilk/doc/library-spec.tex: New file.
+
+	* /cvsroot/cilk/cilk/doc/lanref.tex: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/doc/lanref.tex: New file.
+
+	* /cvsroot/cilk/cilk/doc/impl-notes.tex,
+	/cvsroot/cilk/cilk/doc/intro.tex: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/doc/impl-notes.tex,
+	/cvsroot/cilk/cilk/doc/intro.tex: New file.
+
+	* /cvsroot/cilk/cilk/doc/fib-closures.eps,
+	/cvsroot/cilk/cilk/doc/fib-compile.fig,
+	/cvsroot/cilk/cilk/doc/fib.tex, /cvsroot/cilk/cilk/doc/fib2.tex:
+	Initial Cilk import into sourceforge
+
+	* /cvsroot/cilk/cilk/doc/fib-closures.eps,
+	/cvsroot/cilk/cilk/doc/fib-compile.fig,
+	/cvsroot/cilk/cilk/doc/fib.tex, /cvsroot/cilk/cilk/doc/fib2.tex:
+	New file.
+
+	* /cvsroot/cilk/cilk/doc/defs.tex: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/doc/defs.tex: New file.
+
+	* /cvsroot/cilk/cilk/doc/cilk.bib,
+	/cvsroot/cilk/cilk/doc/copyright.tex: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/doc/cilk.bib,
+	/cvsroot/cilk/cilk/doc/copyright.tex: New file.
+
+	* /cvsroot/cilk/cilk/doc/cactus.eps: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/doc/cactus.eps: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/verify-parse.c,
+	/cvsroot/cilk/cilk/cilk2c/warning.c,
+	/cvsroot/cilk/cilk/doc/Makefile.am: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/verify-parse.c,
+	/cvsroot/cilk/cilk/cilk2c/warning.c,
+	/cvsroot/cilk/cilk/doc/Makefile.am: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/type2.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/type2.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/type.c,
+	/cvsroot/cilk/cilk/cilk2c/type.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/type.c,
+	/cvsroot/cilk/cilk/cilk2c/type.h: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/transform.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/transform.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/symbol.c,
+	/cvsroot/cilk/cilk/cilk2c/symbol.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/symbol.c,
+	/cvsroot/cilk/cilk/cilk2c/symbol.h: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/sem-check.c,
+	/cvsroot/cilk/cilk/cilk2c/strings.c,
+	/cvsroot/cilk/cilk/cilk2c/sue.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/sem-check.c,
+	/cvsroot/cilk/cilk/cilk2c/strings.c,
+	/cvsroot/cilk/cilk/cilk2c/sue.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/procedure.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/procedure.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/print-ast.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/print-ast.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/output.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/output.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/operators.c,
+	/cvsroot/cilk/cilk/cilk2c/operators.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/operators.c,
+	/cvsroot/cilk/cilk/cilk2c/operators.h: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/main.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/main.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/initializer.c,
+	/cvsroot/cilk/cilk/cilk2c/initializer.h,
+	/cvsroot/cilk/cilk/cilk2c/list.c,
+	/cvsroot/cilk/cilk/cilk2c/list.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/initializer.c,
+	/cvsroot/cilk/cilk/cilk2c/initializer.h,
+	/cvsroot/cilk/cilk/cilk2c/list.c,
+	/cvsroot/cilk/cilk/cilk2c/list.h: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/hint.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/hint.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/dataflow.c,
+	/cvsroot/cilk/cilk/cilk2c/dataflow.h,
+	/cvsroot/cilk/cilk/cilk2c/heap.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/dataflow.c,
+	/cvsroot/cilk/cilk/cilk2c/dataflow.h,
+	/cvsroot/cilk/cilk/cilk2c/heap.h: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/conversions.c,
+	/cvsroot/cilk/cilk/cilk2c/conversions.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/conversions.c,
+	/cvsroot/cilk/cilk/cilk2c/conversions.h: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/container.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/container.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/config.h,
+	/cvsroot/cilk/cilk/cilk2c/constexpr.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/config.h,
+	/cvsroot/cilk/cilk/cilk2c/constexpr.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/c4.l,
+	/cvsroot/cilk/cilk/cilk2c/complex-types.c: Initial Cilk import
+	into sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/c4.l,
+	/cvsroot/cilk/cilk/cilk2c/complex-types.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/basics.h: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/basics.h: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/ast.h,
+	/cvsroot/cilk/cilk/cilk2c/astgen: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/ast.h,
+	/cvsroot/cilk/cilk/cilk2c/astgen: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/ast.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/ast.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/analyze.c: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/analyze.c: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/ANSI-C.y,
+	/cvsroot/cilk/cilk/cilk2c/BUGS,
+	/cvsroot/cilk/cilk/cilk2c/Makefile.am: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/ANSI-C.y,
+	/cvsroot/cilk/cilk/cilk2c/BUGS,
+	/cvsroot/cilk/cilk/cilk2c/Makefile.am: New file.
+
+	* /cvsroot/cilk/cilk/cilk2c/.indent.pro: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/cilk2c/.indent.pro: New file.
+
+	* /cvsroot/cilk/cilk/FAQ/m-info.pl,
+	/cvsroot/cilk/cilk/FAQ/m-lout.pl,
+	/cvsroot/cilk/cilk/FAQ/m-post.pl,
+	/cvsroot/cilk/cilk/cilk2c/.cvsignore: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/FAQ/m-info.pl,
+	/cvsroot/cilk/cilk/FAQ/m-lout.pl,
+	/cvsroot/cilk/cilk/FAQ/m-post.pl,
+	/cvsroot/cilk/cilk/cilk2c/.cvsignore: New file.
+
+	* /cvsroot/cilk/cilk/FAQ/cilk-faq.bfnn,
+	/cvsroot/cilk/cilk/FAQ/html.refs,
+	/cvsroot/cilk/cilk/FAQ/m-ascii.pl,
+	/cvsroot/cilk/cilk/FAQ/m-html.pl: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/FAQ/cilk-faq.bfnn,
+	/cvsroot/cilk/cilk/FAQ/html.refs,
+	/cvsroot/cilk/cilk/FAQ/m-ascii.pl,
+	/cvsroot/cilk/cilk/FAQ/m-html.pl: New file.
+
+	* /cvsroot/cilk/cilk/FAQ/bfnnconv.pl: Initial Cilk import into
+	sourceforge
+
+	* /cvsroot/cilk/cilk/FAQ/bfnnconv.pl: New file.
+
+	* /cvsroot/cilk/cilk/FAQ/Makefile.am, /cvsroot/cilk/cilk/README,
+	/cvsroot/cilk/cilk/THANKS, /cvsroot/cilk/cilk/acinclude.m4,
+	/cvsroot/cilk/cilk/bootstrap.sh, /cvsroot/cilk/cilk/configure.in,
+	/cvsroot/cilk/cilk/mdate-sh: Initial Cilk import into sourceforge
+
+	* /cvsroot/cilk/cilk/FAQ/Makefile.am, /cvsroot/cilk/cilk/README,
+	/cvsroot/cilk/cilk/THANKS, /cvsroot/cilk/cilk/acinclude.m4,
+	/cvsroot/cilk/cilk/bootstrap.sh, /cvsroot/cilk/cilk/configure.in,
+	/cvsroot/cilk/cilk/mdate-sh: New file.
+
+	* /cvsroot/cilk/cilk/ChangeLog, /cvsroot/cilk/cilk/Makefile.am,
+	/cvsroot/cilk/cilk/NEWS: Initial Cilk import into sourceforge
+
+	* /cvsroot/cilk/cilk/ChangeLog, /cvsroot/cilk/cilk/Makefile.am,
+	/cvsroot/cilk/cilk/NEWS: New file.
+
+	* /cvsroot/cilk/cilk/ANNOUNCE, /cvsroot/cilk/cilk/AUTHORS,
+	/cvsroot/cilk/cilk/COPYRIGHT: Initial Cilk import into sourceforge
+
+	* /cvsroot/cilk/cilk/ANNOUNCE, /cvsroot/cilk/cilk/AUTHORS,
+	/cvsroot/cilk/cilk/COPYRIGHT: New file.
+

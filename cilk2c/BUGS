@@ -1,0 +1,183 @@
+- If the type of the return argument and the return type of the procedure
+  are not the same size, bad things happen.
+
+- incomplete array declarations don't work correctly yet.  For
+  instance, the code
+
+       int a[] = {1,2,3};
+
+  won't compile correctly inside a cilk procedure.  If you add the
+  array dimension, then everything works fine, as in
+
+       int a[3] = {1,2,3};
+
+- cilk2c doesn't allow variables defined as "const" in array dimension
+  declarations. The following code compiles smoothly with gcc:
+
+       const int x = 17;
+       void foo() {
+         int y[x][x];
+       }
+
+  However, cilk2c doesn't allow it.  Instead, you must use a define:
+
+       #define x 17
+       void foo() {
+         int y[x][x];
+       }
+
+
+- No warning for multi-character character constants.
+
+- Cilk2c sometimes generates code that causes gcc to complain about
+  a possibly uninitialized use of a variable.  It happens in the
+  following situation:
+
+       int x;
+       for(...) {
+         spawn foo();
+         x = 7;
+       }
+
+  Dataflow analysis determines that x might be dirty before the spawn,
+  and therefore puts a _frame->x = x; instruction before the spawn as
+  part of the state saving statements.  However, gcc realizes (correctly)
+  that this is a use of an uninitialized variable.  However, since we
+  are only saving a variable whose restored value will never be used,
+  we are OK.  It would be nice to come up with some way of convincing
+  gcc not to issue such a warning.
+
+- Implicit type conversion in return statements doesn't work correctly.
+  In the following code:
+
+       cilk float foo(void)
+       {
+	  int i;
+          i = spawn fib(20);
+          sync;
+          return i;
+       }
+  
+  foo may return an invalid value to its parent (the variable i may be
+  memcpy()'d into the receiver of its parent without being type converted
+  to a float).  To avoid this problem, use a typecast in your return
+  statement:
+
+          return (float)i;
+
+
+MINOR BUGS - These don't really need to be fixed, but it would be nice if
+             they were.
+
+- cilk2c doesn't check printf format strings against printf's other
+  arguments.  Therefore, gcc (which does such a check) gives a warning
+  when it compiles the code.
+
+- If a procedure has no spawns in it, we don't need to generate a slow
+  version for it (or signature, for that matter).  In fact, we may not
+  even need to generate a frame.  Note that some parts of the frame may
+  be required for critical path measurements, etc.
+
+- The '=' in a spawn statement doesn't do any assignment conversion.
+  It would be nice if the following code would compile:
+
+         cilk float foo();
+         cilk void bar() {
+           int x;
+           x = spawn foo();
+         }
+
+  We could compile the spawn by using C's automatic assignment conversion
+  as follows:
+
+         int _tmp;
+         PUSH_FRAME(...);
+         _tmp = spawn foo();
+         XPOP_FRAME_RESULT(_tmp, ...);
+         x = _tmp;
+
+  Currently, the type of _tmp is the type of the spawned function, not
+  of the receiver.  This should be reversed.
+
+- Strange bug: Defining a cilk-procedure prototype in a .h file that 
+  is included in an .cilk file produces a cilk2c error message:
+
+  .h: cilk void fun(...);
+
+  .cilk: #include ".h"
+
+  leads to the following cilk2c message:
+
+   .h:1: expecting a function definition
+   .h:1: parse error
+    
+                                  - Volker
+
+  Note: This is a "feature", not a bug.  Cilk extension processing
+        is turned off in .h files to be compatible with system .h files
+        which have Cilk keywords like `abort' in them.  Put your Cilk
+        declarations in .cilkh files.    -Keith
+
+- cilk2c doesn't like the first line - you must add more brackets, as in
+  the second line, to get it through cilk2c.
+
+char foo[2][6] = {"hello", "xxxxx"};
+char foo[2][6] = {{"hello"}, {"xxxxx"}};
+
+- cilk2c doesn't allow declarations like
+
+extern int foo(int a[][]);
+
+  I'm not sure if such a declaration is ANSI or not, but it looks
+fishy.  However, all compilers accept it, so it may be ANSI.
+
+- cilk2c doesn't allow non-constant array initializers
+
+void foo (int a)
+{
+  int b[1] = {a};
+}
+
+  Non-constant array initializers are a gcc extension - they are not ANSI.
+
+- cilk2c doesn't think constant "long long" expressions are constant.  For
+  example, for the code
+
+long long a[1] = { 10LL };
+
+  cilk2c complains that the initializer is not constant.  Removing one of
+  the Ls fixes the complaint.
+
+- not all forms of spawning a procedure via a pointer are supported.  For
+  example, the code
+
+void f(void (*g)())
+{
+  g();
+  (*g)();
+}
+
+  compiles with an ANSI-C compiler, but the cilk code
+
+#include <cilk.h>
+cilk void f(cilk void (*g)())
+{
+  spawn g();
+  spawn (*g)();
+  sync;
+}
+
+  gives a parse error in the `spawn (*g)()' statement.  You can spawn
+  a cilk procedure through a procedure pointer, but not through a
+  dereferenced procedure pointer.
+
+
+
+
+
+
+
+
+
+
+

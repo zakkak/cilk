@@ -1,0 +1,318 @@
+#!/usr/local/bin/perl
+
+@astspec = grep(!/^-/, @ARGV);
+@options = grep(/^-/, @ARGV);
+
+&readin;
+
+if (!@astspec) {
+   @astspec = @all_true_names_together;
+}
+
+for $kind (@options) {
+   for $name (@astspec) {
+	$lcname = $name;
+	$lcname =~ tr/A-Z/a-z/;
+	$name = $all_true_names{$lcname};
+        $struct_name = $all_struct_names{$lcname};
+	@fields = split(",",$all_fields{$lcname});
+
+	$all = ($kind =~ /^-al/);
+
+	# require only partial match 
+	&makeprototype if $all || $kind =~ /^-makep/;
+	&astswitch if $all || $kind =~ /^-asts/;
+	&astwalk if $all || $kind =~ /^-astw/;
+	&makedefn if $all || $kind =~ /^-maked/;
+	&nodecopy if $all || $kind =~ /^-n/;
+	&discardcoords if $all || $kind =~ /^-di/;
+	&kindsof if $all || $kind =~ /^-k/;
+	&verify if $all || $kind=~ /^-v/;
+	&printast if $all || $kind =~ /^-p/;
+	&semcheck if $all || $kind =~ /^-s/;
+	&hint if $all || $kind =~ /^-hint/;
+	&dataflow if $all || $kind =~ /^-da/;
+   }
+}
+
+
+sub makeprototype {
+&putin("ast.h");
+local(@f, @g, $");
+foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);
+	$typ =~ s/Child//;
+	push(@f, "$typ$fld"); 
+}
+$f1 = join(", ", @f);
+print <<"END";
+GLOBAL inline Node *Make${name}($f1);
+GLOBAL inline Node *Make${name}Coord($f1, Coord coord);
+END
+}
+
+sub astswitch {
+&putin("ast.h");
+local($f);
+$f = sprintf("%-14s ", "${name}:");
+print <<"END";
+ case ${f}CODE($name, n, &n->u.$struct_name); break; \\
+END
+}
+
+sub astwalk {
+&putin("ast.h");
+local($f,@g);
+$f = sprintf("%-14s ", "${name}:");
+foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);
+  $bugger = "n->u.${struct_name}.${fld}";
+  push(@g, "if ($bugger) {CODE($bugger);}"), next if $typ =~ /ChildNode/;
+  push(@g, "if ($bugger) {LISTWALK($bugger, CODE);}"), next if $typ =~ /ChildList/;
+}
+push(@g, "break;");
+print <<"END";
+ case ${f}@{g} \\
+END
+}
+
+sub makedefn {
+&putin("ast.c");
+local(@f, @g, @h, $");
+foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);  
+	$typ =~ s/Child//;
+	push(@f, "$typ$fld");
+        push(@h, "$fld");
+	push(@g, <<"END");
+  create->u.${struct_name}.$fld = $fld;
+END
+}
+$f1 = join(", ", @f);
+$h1 = join(", ", @h);
+print <<"END";
+GLOBAL inline Node *Make${name}($f1)
+{
+  Node *create = NewNode(${name});
+@g  return create;
+}
+
+GLOBAL inline Node *Make${name}Coord($f1, Coord coord)
+{
+  Node *create = Make${name}($h1);
+  create->coord = coord;
+  return create;
+}
+
+END
+}
+
+sub nodecopy {
+&putin("ast.c");
+local($f,@g);
+$f = sprintf("%-14s ", "${name}:");
+foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);
+  push(@g, "new->u.${struct_name}.${fld} = ListCopy(new->u.${struct_name}.${fld}); "), next if $typ =~ /ChildList/;
+}
+return unless @g;
+push(@g, "break;");
+print <<"END";
+    case ${f}@{g}
+END
+}
+
+sub discardcoords {
+&putin("ast.c");
+local($f,@g);
+$f = sprintf("%-8s ", "${name}:");
+foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);
+  push(@g, "node->u.${struct_name}.${fld} = UnknownCoord; "), next if $typ =~ /Coord/;
+}
+return unless @g;
+push(@g, "break;");
+print <<"END";
+  case ${f}@{g}
+END
+}
+
+sub kindsof {
+&putin("ast.c");
+print <<"END"
+PRIVATE inline Kinds KindsOf$name()
+{ return KIND_; }
+
+END
+}
+
+sub verify {
+&putin("verify-parse.c");
+local(@f, @g, $");
+foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);  
+	push(@g, <<"END");
+  Verify(u->$fld);
+END
+}
+print <<"END";
+PRIVATE inline void Verify${name}(Node *node, ${struct_name}Node *u, Context c)
+{
+@g}
+
+END
+}
+
+
+sub printast {
+&putin("print-ast.c");
+local(@f, @g, $");
+foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);  
+  push(@g, <<"END"), next if $typ =~ /ChildNode/;
+
+  PrintCRSpaces(out, offset + 2);
+  PrintNode(out, u->$fld, offset + 2);
+END
+  push(@g, <<"END"), next if $typ =~ /ChildList/;
+
+  PrintCRSpaces(out, offset + 2);
+  fputs("List: $fld", out);
+  PrintCRSpaces(out, offset + 4);
+  PrintList(out, u->$fld, offset + 4);
+END
+  push(@g, <<"END");
+
+  PrintCRSpaces(out, offset + 2);
+  PrintThis(out, u->$fld, offset + 2);
+END
+}
+print <<"END";
+PRIVATE inline void Print${name}(FILE *out, Node *node, ${struct_name}Node *u, int offset, Bool norecurse)
+{
+  fprintf(out, "${name}: ");
+@g}
+
+END
+}
+
+
+sub semcheck {
+&putin("sem-check.c");
+local(@f, @g, $");
+foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);  
+  push(@g, <<"END"), next if $typ =~ /ChildNode/;
+  u->$fld = SemCheckNode(u->$fld);
+END
+  push(@g, <<"END"), next if $typ =~ /ChildList/;
+  u->$fld = SemCheckList(u->$fld);
+END
+}
+print <<"END";
+PRIVATE inline Node *SemCheck${name}(Node *node, ${struct_name}Node *u)
+{
+@g  return node;
+}
+
+END
+}
+
+sub hint {
+&putin("hint.c");
+local(@f, @g, $");
+foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);  
+  push(@g, <<"END"), next if $typ =~ /ChildNode/;
+  u->$fld = HintNode(u->$fld);
+END
+  push(@g, <<"END"), next if $typ =~ /ChildList/;
+  u->$fld = HintList(u->$fld);
+END
+}
+print <<"END";
+PRIVATE inline Node *Hint${name}(Node *node, ${struct_name}Node *u)
+{
+@g  return node;
+}
+
+END
+}
+
+sub dataflow {
+&putin("dataflow.c");
+local(@f, @g, @h, $");
+#foreach $fldtyp (@fields) { ($fld,$typ) = split(/:/,$fldtyp);  
+#  undef($foo);
+#  $foo = <<"END" if $typ =~ /ChildNode/;
+#    v = DataFlow(u->$fld, in);
+#END
+#  $foo = <<"END" if $typ =~ /ChildList/;
+#    v = DataFlowSerialList(u->$fld, in);
+#END
+#
+#    if ($foo) {
+#	push(@g, $foo);
+#	unshift(@h, $foo);
+#    }
+#}
+print <<"END";
+PRIVATE inline FlowValue DataFlow${name}(Node *node, ${struct_name}Node *u, FlowValue v)
+{
+  if (Forward) {
+  }
+  else {
+  }
+  return v;
+}
+
+END
+}
+
+sub readin {
+   open(AST, "<ast.h") || die("Can't open ast.h: $?");
+   $collect = 0;
+   $collect2 = 0;
+   for (<AST>) {
+      chop;
+      if (/^typedef struct \{/) { 
+	  $collect = 1; undef(@these_fields); next; 
+      }
+      if ($collect && /^\}[ \t]*([A-Za-z_0-9]+)Node;/)  {
+	$lcname = $1;
+	$lcname =~ tr/A-Z/a-z/;
+          $all_struct_names{$lcname} = $1;
+          $all_fields{$lcname} = join(",",@these_fields);
+          $collect = 0; next;
+      }
+      if ($collect && /^[ \t]*([A-Za-z][A-Za-z0-9_ \*]+[ \*])([A-Za-z0-9_]+);/) {
+          push(@these_fields,"$2:$1");
+      }
+
+
+      if (/^typedef enum \{/) { 
+	  $collect2 = 1; undef(@these_ids); next; 
+      }
+      if ($collect2 && /\}.*NodeType.*;/)  {
+	  @all_true_names_together = @these_ids;
+          foreach $tn (@these_ids) {
+		$lcname = $tn;
+		$lcname =~ tr/A-Z/a-z/;
+	        $all_true_names{$lcname} = $tn;
+	  }
+          $collect2 = 0; next;
+      }
+      if ($collect2 && /\}.*;/)  {
+          $collect2 = 0; next;
+      }
+      if ($collect2) {
+          s/\/\*.*\*\///g;
+	  s/[ \t]//g;
+          push(@these_ids,split(/,/));
+      }
+   }
+}
+
+
+
+
+sub putin {
+    return if $where eq $_[0];
+    $where = $_[0];
+    print <<"END";
+==================================
+  In @_:
+==================================
+END
+}

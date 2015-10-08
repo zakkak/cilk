@@ -1,0 +1,275 @@
+\comment -*- Text -*-
+\comment This is the source for the Cilk FAQ list, in
+\comment the Bizarre Format With No Name.  It is turned into Lout
+\comment input, HTML, plain ASCII and an Info document by a Perl script.
+\comment
+\comment The format and scripts come from the Linux FAQ, by
+\comment Ian Jackson.
+\set brieftitle Cilk FAQ
+\set author     Bradley C. Kuszmaul / <A href="mailto:bradley@mit.edu">bradley@mit.edu</A>
+\set authormail bradley@mit.edu
+\set title      Cilk Frequently Asked Questions with Answers
+\set copyholder Bradley C. Kuszmaul
+\call-html startup html.refs
+\copyto ASCII
+	     CILK FREQUENTLY ASKED QUESTIONS WITH ANSWERS
+  			     `date '+%d %h %Y'`
+			     Matteo Frigo
+			  <athena@fftw.org>
+			  Bradley C. Kuszmaul
+			  <bradley@mit.edu>
+
+\endcopy
+\copyto INFO
+START-INFO-DIR-ENTRY
+* Cilk FAQ: (cilk-faq). Cilk Frequently Asked Questions with Answers.
+END-INFO-DIR-ENTRY
+
+
+File: $prefix.info, Node: Top, Next: Question 1.1, Up: (dir)
+
+	     CILK FREQUENTLY ASKED QUESTIONS WITH ANSWERS
+			     `date '+%d %h %Y'`
+			     Matteo Frigo
+			  <athena@fftw.org>
+			  Bradley C. Kuszmaul
+			  <bradley@mit.edu>
+
+\endcopy
+
+This is the list of Frequently Asked Questions about Cilk, a
+language for multithreaded parallel programming based on ANSI C.
+\section  Index
+
+\index
+
+\comment ######################################################################
+
+\section  Introduction and General Information
+
+\question 06may:whatiscilk  What is Cilk?
+
+Cilk is a language for multithreaded parallel programming based on
+ANSI C.  Cilk is designed for general-purpose parallel programming,
+but it is especially effective for exploiting dynamic, highly
+asynchronous parallelism, which can be difficult to write in
+data-parallel or message-passing style.  Cilk has been developed since
+1994 by the Supercomputing Technologies Group at the MIT Laboratory
+for Computer Science.  Cilk has been used for research, teaching, and
+for coding applications such as a virus shell assembly simulator and
+three chess programs.
+
+\question 06may:whereiscilk  How do I obtain Cilk?
+
+Official versions of Cilk can be found at \docref{the Cilk web page\}
+
+We briefly used SourceForge, but they don't know how to stop SPAM, and eventually gave up.
+
+\question 06may:whereiscilk  Are there Cilk-related mailing lists?
+
+Yes.  Look for Cilk at \docref{SourceForge (www.sourceforge.net)\}.
+Three mailing lists exist:
+
+\call startlist
+\call item
+\email{cilk-users@lists.sourceforge.net\} is an open discussion list
+for Cilk users.
+
+However, the Cilk users mailing list is not monitored by the current
+Cilk developers because of spam.  The list is probably useless now.
+
+\call item
+\email{cilk-announce@lists.sourceforge.net\} is a read-only,
+low-traffic mailing list where we announce new releases of
+Cilk.
+
+\call item
+Use the \email{cilk-support@lists.sourceforge.net\} mail alias
+to send mail to a restricted set of Cilk developers.
+\call endlist
+
+\question 06aug:iscilkfree  Is Cilk free software?
+
+Starting with version 5.3, Cilk is Free Software in the technical
+sense defined by the Free Software Foundation (see \docref{Categories
+of Free and Non-Free Software\}), and is distributed under the terms
+of the GNU General Public License.  Previous versions of Cilk were
+distributed without fee for noncommercial use, but were not
+technically ``free.''
+
+\question 06may:systems  Which systems does Cilk run on?
+
+The current Cilk-5.3 system runs on systems that support
+POSIX threads.  In particular, Cilk has been installed
+successfully on GNU/Linux, Solaris, IRIX, Digital Unix, and MacOS X.
+
+Cilk requires certain system software in order to run.  In particular,
+it requires a recent gcc, GNU make, and preferably the GNU linker.
+GNU/Linux systems are usually distributed with all these tools.  Cilk
+should also work on other systems (*BSD etc.) whenever the appropriate
+tools are installed.  If you successfully compile Cilk on these
+systems, please contact me \email{bradley@mit.edu\} so that I can
+update this FAQ.
+
+Cilk-5.3 supports IA-32 (x86), IA-64 (Itanium), AMD64 (x86-64)
+PowerPC, SPARC, MIPS, and Alpha processors.  Porting to other
+processors is not difficult.  Please contact
+\email{cilk-support@lists.sourceforge.net\} if you are interested in
+running Cilk on other machines.
+
+\question 06may:runOnNOW  Does Cilk run on networks of workstations?
+
+Cilk-5.3 does not run on distributed-memory machines.  Keith Randall
+wrote a distributed-memory variant of Cilk-5.1 as part of his
+Ph. D. thesis.  See \docref{the Cilk web page\} for a copy of the
+thesis and for downloading the distributed-memory Cilk version.  Be
+warned that this version is experimental and it has not been updated
+in a long time.
+
+\question 06may:runOnDOS  Does Cilk run on Windows NT?
+
+Please do not send questions about Windows NT to the cilk-support
+mailing list, because the Cilk maintainer does not know anything about
+this system.
+
+\question 06may:cilkchess  What is Cilkchess?
+
+Cilkchess is a chess program written in Cilk.  Cilkchess and Cilk are
+two distinct things. Cilkchess has never been released, and it is not
+part of the Cilk distribution.  For more information about Cilkchess,
+contact its author Don Dailey \email{drd@supertech.lcs.mit.edu\}.
+
+\comment ######################################################################
+
+\section  Installing Cilk
+
+\question 06may:install How do I install Cilk?
+
+Cilk uses the standard GNU installation tools.  To install Cilk, type
+\verbatim
+$ ./configure
+$ make
+$ make check   # run test programs
+# make install
+\endverbatim
+
+\question 06may:install How do I install Cilk in a directory different from \courier{/usr/local\}?
+Type
+\verbatim
+$ ./configure --prefix=<installation directory>
+$ make
+# make install
+\endverbatim
+
+The following commands *do not* work:
+\verbatim
+$ ./configure
+$ make
+# make install prefix=<installation directory>  # DOES NOT WORK
+\endverbatim
+
+\question 06may:cilkCrashes  The example programs compile, but they do not run.
+
+If the example programs do not run, and they complain about
+\courier{libcilk.so\} not being found, then Cilk does not know how to
+hardcode the path to the Cilk shared library into Cilk programs.  Try
+one of the following suggestions:
+
+\call startlist
+\call item
+Try to set the environment variable \courier{LD_LIBRARY_PATH\}
+to \courier{<cilk-dir>/runtime/.libs\}, where 
+\courier{<cilk-dir>\} is the top-level Cilk-5.3 directory.
+
+\call item
+Try installing Cilk in a standard directory, such as
+\courier{/usr\} or \courier{/usr/local\}.
+
+\call item
+Install the GNU linker.  Cilk knows how to set the correct shared-libraries
+path if the GNU linker is used.
+
+\call item
+Disable shared libraries completely, using the command
+\verbatim
+$ ./configure --disable-shared
+\endverbatim
+\call endlist
+
+\question 19may:clockskew  `make' says: ``Warning: Clock skew detected. Your build may be incomplete''.
+
+This warning occurs on a NFS client whose time is not synchronized
+with the NFS server.  The build should be correct nevertheless, but
+it is a good idea to adjust the system clock anyway.
+
+\comment ######################################################################
+
+\section  Using Cilk
+
+\question 06may:compile How do I compile a Cilk program?
+
+Use the \courier{cilkc\} command in the same way you would use
+\courier{gcc\}.  For example, \courier{cilkc -O2 program.cilk -o
+program -lm\}.
+
+\courier{cilkc\} should accept all \courier{gcc\} options,
+and in addition it accepts the following three options.
+
+\call startlist
+\call item
+\courier{-cilk-debug\}: Enable consistency checks in the Cilk runtime
+system.
+
+\call item 
+\courier{-cilk-profile\}: Enable collection of profile information
+within the Cilk runtime system.  You can print this information by
+invoking a Cilk program with the \courier{--stats} flag.
+
+\call item 
+\courier{-cilk-critical-path\}: Enable fine-grain collection of
+the program critical path.  See the Cilk manual for a definition
+of the critical path and an explanation of why you may want
+to know it.
+\call endlist
+
+All files that comprise an executable must be compiled and linked with
+the same set of \courier{-cilk-*\} flags.  If not, the linker prints
+an error message and fails.
+
+Additional \courier{cilkc\} arguments are documented in the
+programming manual.
+
+\question 06may:slow Cilk seems really slow.
+
+Normally, a \courier{spawn\} is 2--6 times slower than a function
+call, but Cilk becomes much slower when the critical-path measurements
+are enabled.  This problem occurs because Cilk reads the system clock
+at every thread boundary (i.e. at every \courier{spawn\},
+\courier{sync\}, \courier{return\}).  Some systems, such as Solaris,
+have fast user-level clock routines, but other systems, such as Linux,
+require a system call.  If Cilk programs are still unacceptably slow
+(when compared to the C version), please contact
+\email{cilk-support@lists.sourceforge.net\}.
+
+\question 06may:otherlanguages  Can I call Cilk from C/C++/FORTRAN?
+
+Not with Cilk-5.3.  We have an experimental ``library version'' of
+Cilk-5.2 which can be called by C, but it was not incorporated into
+Cilk-5.3.
+
+\question 28may:wrongflags  The linker says \courier{Cilk_flags_are_wrong_*_please_recompile\}.
+
+All Cilk files that comprise your program must be compiled and linked
+with the same Cilk flags.  (See \qref compile for a description of the
+Cilk flags.)  If the flags differ, the linker issues and error message
+like the following:
+\verbatim
+undefined reference to `Cilk_flags_are_wrong_NODEBUG_NOTIMING_NOSTATS_please_recompile'
+\endverbatim
+
+
+\comment ######################################################################
+\comment \section  Known bugs
+
+
+\comment Here it ends!

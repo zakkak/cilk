@@ -1,0 +1,42 @@
+\begin{verbatim}
+static void _fib_slow(struct _fib_frame *_frame)
+{
+  int n;
+  switch (_frame->header.entry) {
+  case 1: goto _sync1;
+  case 2: goto _sync2;
+  case 3: goto _sync3;
+  }
+  n=_frame->scope0.n;
+  {
+    if (n < 2) 
+      {_SET_RESULT((n));_BEFORE_RETURN_SLOW();return;}
+    else {
+      { int _temp0;
+        _frame->header.entry=1;
+        _frame->scope0.n=n;
+        _temp0=fib(n-1);
+        _XPOP_FRAME_RESULT(_frame,/* return nothing */,_temp0);
+        _frame->scope1.x=_temp0;
+        if (0) { _sync1:; n=_frame->scope0.n; }
+      }
+      { int _temp1;
+        _frame->header.entry=2;
+        _temp1=fib(n-2);
+        _XPOP_FRAME_RESULT(_frame,/* return nothing */,_temp1);
+        _frame->scope1.y=_temp1;
+        if (0) { _sync2:; }
+      }
+      { _frame->header.entry=3;
+        if (_SYNC) {
+          return;
+          _sync3:;
+        }
+      }
+      { _SET_RESULT((_frame->scope1.x+_frame->scope1.y));
+        _BEFORE_RETURN_SLOW();return;
+      }
+    }
+  }
+}
+\end{verbatim}

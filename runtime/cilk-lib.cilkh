@@ -1,0 +1,106 @@
+/* -*- Mode: C -*- */
+/*
+ * Copyright (c) 2000 Massachusetts Institute of Technology
+ * Copyright (c) 2000 Matteo Frigo
+ *
+ *  This library is free software; you can redistribute it and/or modify it
+ *  under the terms of the GNU Lesser General Public License as published by
+ *  the Free Software Foundation; either version 2.1 of the License, or (at
+ *  your option) any later version.
+ *  
+ *  This library is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307,
+ *  USA.
+ *
+ */
+
+#ifndef _CILK_LIB_H
+#define _CILK_LIB_H
+
+#include <cilk.h>
+
+FILE_IDENTITY (ident_cilk_lib_h,
+	       "$HeadURL: https://bradley.csail.mit.edu/svn/repos/cilk/5.4.3/runtime/cilk-lib.cilkh $ $LastChangedBy: bradley $ $Rev: 1699 $ $Date: 2004-10-22 22:22:25 -0400 (Fri, 22 Oct 2004) $");
+
+/***********************************************************\
+ * Memory allocator functions
+\***********************************************************/
+
+extern void *Cilk_alloca_internal(CilkWorkerState *const ws, size_t size);
+extern __nooutput__ void *Cilk_alloca(size_t size);
+
+/***********************************************************\
+ * Cilk_exit
+\***********************************************************/
+
+extern cilk void Cilk_really_exit(int retval);
+
+/* Cilk_exit */
+#define Cilk_exit(ret)  			\
+do {						\
+     spawn Cilk_really_exit(ret);		\
+} while (0)
+
+/* Ofra and Sivan: Changed the definition, 19 June 2003 */
+#define Cilk_die(fmt) Cilk_die_external(_cilk_ws->context,fmt);
+extern void Cilk_die_external(CilkContext *const context, const char *fmt,...);
+/* extern void Cilk_die(const char *fmt,...); */
+
+/***********************************************************\
+ * locks
+\***********************************************************/
+typedef volatile int Cilk_lockvar[1];
+
+static inline void Cilk_lock_init(Cilk_lockvar v)
+{
+     v[0] = 0;
+}
+
+static inline void Cilk_lock(Cilk_lockvar v)
+{
+     while (Cilk_xchg((int *)v, 1) != 0) {
+	  while (v[0]);  /* spin using only reads - reduces bus traffic */
+     }
+}
+
+static inline void Cilk_unlock(Cilk_lockvar v)
+{
+     Cilk_membar_StoreStore();
+     v[0] = 0;
+}
+
+/***********************************************************\
+ * Debugging support
+\***********************************************************/
+
+#ifdef	NDEBUG
+#define Cilk_assert(ex) ((void)0)
+#else
+/* Ofra and Sivan 19 June 2003 */
+/*      (void)((ex) || (Cilk_die(NULL, USE_PARAMETER(assertion_failed_msg), \ */
+#define Cilk_assert(ex) \
+      (void)((ex) || (Cilk_die_external(_cilk_ws->context, USE_PARAMETER2(assertion_failed_msg), \
+             #ex, __LINE__, __FILE__), 0))
+#endif
+
+/***********************************************************\
+ * Real and pseudo variables
+\***********************************************************/
+#define Cilk_active_size USE_PARAMETER2(active_size)
+
+#ifdef __CILK__
+/* support for referencing part of the worker state */
+extern __cilksafe__ __nooutput__ __cilkonly__ int Self;
+extern __cilksafe__ __nooutput__ __cilkonly__ Cilk_time Cilk_user_work;
+extern __cilksafe__ __nooutput__ __cilkonly__ Cilk_time Cilk_user_critical_path;
+/* Sivan and Ofra 19 June 2003 */
+extern __cilksafe__ __nooutput__ __cilkonly__ CilkWorkerState *const _cilk_ws;
+#endif
+
+#endif				/* _CILK_LIB_H */

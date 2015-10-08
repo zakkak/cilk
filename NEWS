@@ -1,0 +1,46 @@
+Changes since Cilk-5.3.2:
+* Put cilk system under subversion control, and got rid of almost all program-generated from the subversion system.
+
+* Get nondeterminator to work again.
+
+Changes since Cilk-5.3.1:
+
+* Support for MacOS X.
+
+* Fixed memory leak in runtime system.
+
+* cilk2c: accept C9X flexible arrays.
+
+Changes since Cilk-5.3:
+
+* Patched to use the unofficial gcc-2.96 that comes with redhat-7.0.
+
+* cilk2c: stricter typechecking for inlet calls.  Do not apply usual
+  call conversions.
+
+* Added support for libhoard.
+
+* cilk2c: fixed bug regarding function redeclarations.
+
+Changes since Cilk-5.2:
+
+* Cilk is now released under the GNU General Public License.
+
+* The `cilk' command now automates all stages of compilation
+  and linking.  Use `cilk -O2 hello.cilk -o hello' to compile
+  a simple program.
+
+* Improved GNU/Linux support.  cilk2c can now parse all Linux/glibc-2 include
+  files.
+
+* INCOMPATIBLE CHANGE: header file cilk-compat.h is no longer required
+  and it is not provided.
+
+* Fixed many bugs in cilk2c.
+
+* Cilk now always runs on top of POSIX threads. The Cilk-5.2
+  distinction between threaded and process version has disappeared.  
+
+* The GNU linker is no longer required.  Cilk should run on
+  any system that supports gcc, GNU make, and POSIX threads.
+

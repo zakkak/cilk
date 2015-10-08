@@ -1,0 +1,1751 @@
+% -*-latex-*-
+\chapter{Programming in Cilk}
+\label{chap:prog-guide}
+
+This chapter introduces the Cilk language to programmers who are
+already reasonably familiar with~C\@.  \secref{Cilk-ext} introduces
+the Cilk language through the example of computing Fibonacci numbers.
+\secref{compile-run} steps through the process of writing, compiling,
+and running simple Cilk programs.  \secref{cilk-c} describes how Cilk
+and C interact.  \secref{storage} discusses storage allocation.
+\secref{shared} discusses shared memory. \secref{locking} describes
+the locking primitives that Cilk provides for atomicity.
+\secref{advanced} treats some of Cilk's more advanced language
+features, including constructs for aborting already-spawned work and
+how to call Cilk procedures as library functions from~C.  Finally,
+\secref{model} describes the computational model supported by Cilk's
+scheduler, and \secref{perf-meas} describes Cilk's facilities for
+measuring performance.
+
+Additional material on multithreaded programming using a Cilk-like
+model can be found in the minicourse notes~\cite{LeisersonPr98}.  The
+minicourse focuses on how recursive multithreaded algorithms can be
+designed and analyzed.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The Cilk language}
+\label{sec:Cilk-ext}
+
+Cilk is an algorithmic multithreaded language.  The philosophy behind
+Cilk is that a programmer should concentrate on structuring his
+program to expose parallelism and exploit locality, leaving the
+runtime system with the responsibility of scheduling the computation
+to run efficiently on the given platform.  Cilk's runtime system takes
+care of details like load balancing and communication protocols.
+Unlike other multithreaded languages, however, Cilk is algorithmic in
+that the runtime system's scheduler guarantees provably efficient and
+predictable performance.
+
+The basic Cilk language is simple.  It consists of C with the addition
+of three keywords to indicate parallelism and synchronization.  A Cilk
+program, when run on one processor, has the same semantics as the C
+program that results when the Cilk keywords are deleted.  We call this
+C program the \defn{serial elision}\index{serial elision} or \defn{C
+  elision} of the Cilk program.  Cilk extends the semantics C in a
+natural way for parallel execution.
+
+One of the simplest examples of a Cilk program is a recursive program
+to compute the $n$th Fibonacci number.  A C program to compute the
+$n$th Fibonacci number is shown in \figref{fib}(a), and
+\figref{fib}(b) shows a Cilk program that does the same computation in
+parallel.\footnote{This program is a terrible way to compute Fibonacci
+numbers, since it runs in exponential time while logarithmic-time
+methods are known~\cite[page 850]{CormenLeRi90}.} Notice how similar
+the two programs look.  In fact, the only differences between them are
+the inclusion of a few keywords: \texttt{cilk}, \texttt{spawn}, and
+\texttt{sync}.
+
+\begin{figure}
+\centering
+\begin{minipage}{.45\textwidth}
+\footnotesize
+\begin{verbatim}
+#include <stdlib.h>
+#include <stdio.h>
+
+int fib (int n)
+{ 
+    if (n<2) return (n);
+    else
+    {
+        int x, y;
+
+        x = fib (n-1);
+        y = fib (n-2);
+
+        return (x+y);
+    }
+}
+
+int main (int argc, char *argv[])
+{
+    int n, result;
+
+    n = atoi(argv[1]);
+    result = fib (n);
+
+    printf ("Result: %d\n", result);
+    return 0;
+}
+\end{verbatim}
+\centerline{\textbf{(a)}}
+\end{minipage}\hspace{.05\textwidth}
+\begin{minipage}{.4\textwidth}
+\footnotesize
+\begin{verbatim}
+#include <stdlib.h>
+#include <stdio.h>
+
+cilk int fib (int n)
+{
+    if (n<2) return n;
+    else
+    {
+        int x, y;
+
+        x = spawn fib (n-1);
+        y = spawn fib (n-2);
+
+        sync;
+
+        return (x+y);
+    }
+}
+
+cilk int main (int argc, char *argv[])
+{
+    int n, result;
+
+    n = atoi(argv[1]);
+    result = spawn fib(n);
+
+    sync;
+
+    printf ("Result: %d\n", result);
+    return 0;
+}
+\end{verbatim}
+\centerline{\textbf{(b)}}
+\end{minipage}
+\caption{\small \textbf{(a)} A serial C program to compute the $n$th
+Fibonacci number.  \textbf{(b)} A parallel Cilk program to compute the
+$n$th Fibonacci number.}
+\label{fig:fib}
+\end{figure}
+
+\index{Cilk procedure|(textbf} \index{procedure|(textbf} The keyword
+\indexkw{cilk}{}\texttt{cilk} identifies a \defn{Cilk procedure},
+which is the parallel version of a C function.  A Cilk procedure may
+spawn subprocedures in parallel and synchronize upon their completion.
+A Cilk procedure definition is identified by the keyword \texttt{cilk}
+and has an argument list and body just like a C function.
+
+Most of the work in a Cilk procedure is executed serially, just like
+C, but parallelism is created when the invocation of a Cilk procedure
+is immediately preceded by the keyword
+\indexkw{spawn}{}\texttt{spawn}.  A spawn is the parallel analog of a
+C function call, and like a C function call, when a Cilk procedure is
+spawned, execution proceeds to the child.  Unlike a C function call,
+however, where the parent is not resumed until after its child
+returns, in the case of a Cilk spawn, the parent can continue to
+execute in parallel with the child.  Indeed, the parent can continue
+to spawn off children, producing a high degree of parallelism.  Cilk's
+scheduler takes the responsibility of scheduling the spawned
+procedures on the processors of the parallel computer.
+
+A Cilk procedure cannot safely use the return values of the children
+it has spawned until it executes a \indexkw{sync}{}\texttt{sync}
+statement.  If all of its children have not completed when it executes
+a \texttt{sync}, the procedure suspends and does not resume until all
+of its children have completed.  The \texttt{sync} statement is a
+local ``\index{barrier}barrier,'' not a global one as, for example, is
+sometimes used in message-passing programming.  In Cilk, a
+\texttt{sync} waits only for the spawned children of the procedure to
+complete, and not for all procedures currently executing.  When all
+its children return, execution of the procedure resumes at the point
+immediately following the \texttt{sync} statement.  In the Fibonacci
+example, a \texttt{sync} statement is required before the statement
+\texttt{return (x+y)}, to avoid the anomaly that would occur if
+\texttt{x} and \texttt{y} were summed before each had been computed.
+A Cilk programmer uses \texttt{spawn} and \texttt{sync} keywords to
+expose the parallelism in a program, and the Cilk runtime system takes
+the responsibility of scheduling the procedures efficiently.
+
+As an aid to programmers, Cilk inserts an implicit
+\texttt{sync}\indexcatkw{implicit}{sync}{} before every
+\texttt{return}, if it is not present already.  As a consequence, a
+procedure never terminates while it has outstanding children.
+
+The main procedure must be named \texttt{main}, as in~C\@.  Unlike C,
+however, Cilk insists that the return type of \texttt{main} be
+\texttt{int}.  Since the \texttt{main} procedure must also be a Cilk
+procedure, it must be defined with the \texttt{cilk} keyword.
+
+It is sometimes helpful to visualize a Cilk program execution as a
+directed acyclic graph, or \defn{dag}, as is illustrated in
+\figref{model}.  \indexsub{scheduling}{thread}{|(textbf}A Cilk program
+execution consists of a collection of
+\defn{procedures},\footnote{Technically, procedure \defn{instances}.}
+each of which is broken into a sequence of nonblocking \defn{threads}.
+In Cilk terminology, a \defn{thread} is a maximal sequence of
+instructions that ends with a \texttt{spawn}, \texttt{sync}, or
+\texttt{return} (either explicit or implicit) statement.  (The
+evaluation of arguments to these statements is considered part of the
+thread preceding the statement.)  The first thread that executes when
+a procedure is called is the procedure's \defn{initial
+  thread}\indexsub{scheduling}{initial thread}{|textbf}, and the
+subsequent threads are \defn{successor
+  threads}\indexsub{scheduling}{successor threads}{|textbf}.  At
+runtime, the binary ``spawn'' relation causes procedure instances to
+be structured as a rooted tree, and the dependencies among their
+threads form a dag embedded in this \defn{spawn
+  tree}\indexsub{scheduling}{spawn tree}{|textbf}
+\indexsub{scheduling}{thread}{|)textbf} \index{Cilk procedure|)textbf}
+\index{procedure|)textbf}
+
+\begin{figure}
+\centerline{\image{model}{3.5cm}}
+\caption{\small The Cilk model of multithreaded computation.  Each
+procedure, shown as a rounded rectangle, is broken into sequences of
+threads, shown as circles.  A downward edge indicates the spawning of
+a subprocedure.  A horizontal edge indicates the continuation to a
+successor thread.  An upward edge indicates the returning of a value
+to a parent procedure.  All three types of edges are dependencies
+which constrain the order in which threads may be scheduled.}
+\label{fig:model}
+\end{figure}
+
+A correct execution of a Cilk program must obey all the dependencies
+in the dag, since a thread cannot be executed until all the threads on
+which it depends have completed.  We shall discuss properties of the
+Cilk scheduler in \secref{model}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Compiling and running Cilk programs}
+\label{sec:compile-run}
+
+In order to compile Cilk programs, {\sysnameversion} installs the
+\texttt{cilkc} command, which is, roughly speaking, a special version
+of the \texttt{gcc} compiler.  The \texttt{cilk} command understands
+that files with the \texttt{.cilk} extension are Cilk programs and
+acts accordingly.
+
+\texttt{cilkc} accepts many of the same arguments as the \texttt{gcc}
+compiler.  For example, the source code for the Fibonacci example from
+\figref{fib}(b) can be found under the name {\tt fib.cilk} in the
+\texttt{examples} directory of the Cilk distribution.  After
+installing the distribution, you can type the command
+\begin{verbatim}
+    $ cilkc -O2 fib.cilk -o fib
+\end{verbatim}%$
+
+to produce the \texttt{fib} executable.  You can also use many of your
+favorite \texttt{gcc} options, such as \texttt{-g}, \texttt{-Wall},
+and so on.)  To run the program, type:
+\begin{verbatim}
+    > fib --nproc 4 30 
+\end{verbatim}
+this starts \texttt{fib} on 4 processors to compute the 30th Fibonacci
+number.  At the end of the execution, you should see a printout
+similar to the following:
+
+\begin{verbatim}
+    Result: 832040
+\end{verbatim}
+
+\indextim{|(} 
+During program development, it is useful to collect performance data
+of a Cilk program.  The Cilk runtime system collects this information
+when a program is compiled with the flags  \texttt{-cilk-profile}
+and \texttt{-cilk-span}.
+\begin{verbatim}
+    $ cilkc -cilk-profile -cilk-span -O2 fib.cilk -o fib
+\end{verbatim}%$
+The flag \texttt{-cilk-profile} instructs Cilk to collect data about
+how much time each processor spends working, how many thread
+migrations occur, how much memory is allocated, etc.  The flag
+\texttt{-cilk-span} enables measurement of the span (critical
+path).  (The span is the ideal execution time of your program on an
+infinite number of processors.  For a precise definition of the span,
+see \secref{model}.)  We distinguish the \texttt{-cilk-span}
+option from \texttt{-cilk-profile} because the span measurement
+involves many calls to the timing routines, and it may slow down
+programs significantly.  In contrast, \texttt{-cilk-profile} still
+provides useful profiling information without too much overhead.
+
+Cilk program compiled with profiling support can be instructed to
+print performance information by using the \texttt{--stats} option.
+The command line
+\begin{verbatim}
+    > fib --nproc 4 --stats 1 30
+\end{verbatim}
+yields an output similar to the following:
+\begin{verbatim}
+    Result: 832040
+
+    RUNTIME SYSTEM STATISTICS:
+
+    Wall-clock running time on 4 processors: 2.593270 s
+    Total work = 10.341069 s
+    Total work (accumulated) = 7.746886 s
+    Span = 779.588000 us
+    Parallelism = 9937.154003
+\end{verbatim}
+
+After the output of the program itself, the runtime system reports
+several useful statistics collected during execution.  Additional
+statistics can be obtained by setting the statistics level higher
+than~1.\footnote{If span timing is turned on, the total work is
+measured in two different ways.  The second, shown as {\tt Total work
+(accumulated)}, is more accurate as it tries to compensate for the
+running time of the timer calls themselves.}  The parallelism, which
+is the ratio of total work to span, is also printed so that you can
+gauge the scalability of your application.  If you run an application
+on many fewer processors than the parallelism, then you should expect
+linear speedup.
+
+\index{command line!runtime|(}
+The Cilk runtime system accepts the following standard options, which
+must be specified first on a Cilk program's command line:
+\begin{description}
+\item[\texttt{--help}\\]  List available options.
+
+\item[\texttt{--nproc} $n$\\] Use $n$ processors in the computation.
+If $n=0$, use as many processors as are available.  The parameter $n$
+must be at least 0 and be no greater than the machine size.  The
+default is to use 1 processor.
+
+\item[\texttt{--pin-proc} $n$\\] Pins the process to run on a set of 
+  processors indicated by the mask $n$.  The mask is 32 bits; each 
+  bit represents a different processor, with the least significant 
+  bit corresponding to the first processor.  The program will be able 
+  to run on a processor if the bit correlated with it is set to one. 
+  For instance a mask of $1$ allows the program to run only on the 
+  first processor, while a mask of $7$ allows it run on any of the 
+  first three.  $n$ must be a hex value, so to run on any of the 
+  first four processors, use $f$.
+  
+
+\item[\texttt{--stats} $l$\\] Set statistic level to $l$.  The higher
+  the level, the more detailed the information.  The default level is
+  $0$, which disables any printing of statistics.  Level $1$ prints
+  the wall-clock running time, the total work, and the span.  The
+  exact set of statistics printed depends on the flags with which the
+  runtime system and the application were compiled. The highest
+  meaningful statistics level is currently $6$.  \note{Add reference
+  to where we describe flags} \indextim{|)}
+  
+\item[\texttt{--no-stats}\\] Equivalent to \texttt{-stats 0}.
+  
+\item[\texttt{--stack }{\it size}\\] Set a maximum frame stack size of
+  \textit{size} entries.  The frame stack size limits the depth of
+  recursion allowed in the program.  The default depth is 32768.
+  
+\item[\texttt{--pthread-stacksize }{\it size}\\] Set the size of each
+worker thread's stack (in bytes).  Under Irix, the stacksize defaults
+to 131072 bytes, which is often not enough.
+
+\item[\texttt{--}\\] Force Cilk option parsing to stop.  Subsequent
+  options will be passed to the Cilk program unaltered.
+\end{description}
+
+These options must be specified before all user options, since they
+are processed by the Cilk runtime system and stripped away before the
+rest of the user options are passed to \texttt{main}.
+\index{command line!runtime|)}
+
+\figref{compile} illustrates the process by which a Cilk program is
+compiled.  Cilk program files, which end with
+\texttt{.cilk}\indexcat{file extension}{cilkfileextension@\texttt{.cilk}}{|textbf} by convention,
+are first transformed to ordinary C code by the Cilk type-checking
+preprocessor \index{cilktwoc@\texttt{cilk2c}}\texttt{cilk2c},
+producing \texttt{.c} files.  The C code is then compiled using the
+\texttt{gcc} compiler and linked with the Cilk runtime system.  
+You do not need to worry about this compilation process,
+though, since the \texttt{cilkc} command takes care of everything.
+
+\begin{figure}
+\setlength{\unitlength}{0.0018cm}%
+\begin{center}
+\begin{picture}(8800,1599)(889,-2548)
+\thicklines
+\put(1801,-2536){\framebox(1500,900){}}
+\put(4501,-2536){\framebox(1500,900){}}
+\put(6901,-2536){\framebox(1500,900){}}
+\put(901,-2236){\vector( 1, 0){900}}
+\put(3301,-2236){\vector( 1, 0){1200}}
+\put(6001,-2236){\vector( 1, 0){900}}
+\put(8401,-2236){\vector( 1, 0){675}}
+\put(1876,-1812){\makebox(0,0)[lb]{\footnotesize source-to-source}}
+\put(1876,-2066){\makebox(0,0)[lb]{\footnotesize compiler}}
+\put(6976,-1865){\makebox(0,0)[lb]{\footnotesize linking}}
+\put(6976,-2026){\makebox(0,0)[lb]{\footnotesize loader}}
+\put(4576,-1865){\makebox(0,0)[lb]{\footnotesize c-compiler}}
+\put(2301,-2461){\makebox(0,0)[lb]{\Large\bf cilk2c}}
+\put(5426,-2461){\makebox(0,0)[lb]{\Large\bf gcc}}
+\put(8056,-2461){\makebox(0,0)[lb]{\Large\bf ld}}
+\put(900,-2161){\makebox(0,0)[lb]{\bf fib.cilk}}
+\put(3546,-2161){\makebox(0,0)[lb]{\bf fib.c}}
+\put(6196,-2161){\makebox(0,0)[lb]{\bf fib.o}}
+\put(8596,-2161){\makebox(0,0)[lb]{\bf fib}}
+\put(7201,-961){\vector( 0,-1){675}}
+\put(7241,-1261){\makebox(0,0)[lb]{Cilk}}
+\put(7241,-1501){\makebox(0,0)[lb]{Runtime System}}
+\end{picture}
+\end{center}
+\caption{\small Compiling the Fibonacci program.  Cilk code is passed
+through the \texttt{cilk2c} compiler, a type-checking preprocessor
+which generates C output.  This output is then compiled with
+\texttt{gcc} and linked with the Cilk runtime library.}
+\label{fig:compile}
+\end{figure}
+
+Due to preprocessing steps, the cilk compilation process is actually a
+little more complex than the one shown in \figref{compile}.  Suppose
+that you want to compile a program \texttt{foo.cilk}, then here are
+the steps that are run.
+\begin{enumerate}
+\item The \texttt{.cilk} file and a header file are included (using \verb+#include+) in a file named \texttt{.cilkI}.
+\item The \texttt{.cilkI} file (which \verb+#includes+ the .cilk file) is processed by the C preprocessor
+(using \texttt{gcc -E}, to produce a file with the \texttt{.cilki} suffix.
+\item The \texttt{.cilki} file is processed by the \texttt{cilk2c}
+translator which transforms Cilk constructs into C constructs and
+calls to the cilk runtime system.  The resulting file has the
+\texttt{.cilkc} suffix.
+\item The \texttt{.cilkc} file is run through the C preprocessor again
+to produce a file with the \texttt{.i} suffix.
+\item The \texttt{gcc} then is called to handle files with these
+suffixes \texttt{.c, .i, .o, .a, .so, .ii, .m, .h, .cc, .cxx, .cpp,
+.C, .s., .S} and with no known suffix.
+\end{enumerate}
+
+Note: Your version of Cilk may be configured to use some other
+compiler besides \texttt{gcc} for to compile the C files.  For example
+if the person who installed Cilk does:
+\begin{verbatim}
+ CC=/usr/bin/cc ./configure && make
+\end{verbatim}
+then \texttt{cilkc} uses /usr/bin/cc instead of gcc.  Some arguments
+are gcc-specific, so you may not be able to use them with another
+compiler.
+
+The \texttt{cilkc} compiler accepts the following arguments:
+\begin{description}
+\item[\texttt{-E0}\\] Stop after producing \texttt{.cilki} files
+(\texttt{.cilk} files preprocessed once).
+
+\item[\texttt{-E1}\\] Stop after producing \texttt{.cilkc} files
+(files translated by \texttt{cilk2c}).
+
+\item[\texttt{-E}\\] Stop after producing \texttt{.i} files (fully
+preprocessed files).
+
+\item[\texttt{-S}\\] Stop after producing \texttt{.S} files (assembly
+files).
+
+\item[\texttt{-c}\\] Stop after producing \texttt{.o} files (binary
+files to be linked).
+
+\item[\texttt{-v1}\\] Verbosity level 1: Show what commands are being
+executed.
+
+\item[\texttt{-v2}\\] Verbosity level 2: Show what commands are being
+executed, and pass the \texttt{-v} arguments to those commands.
+
+\item[\texttt{-v}\\] The same as \texttt{-v2}.
+
+\item[\texttt{-cilk-profile}\\] Instruct \texttt{cilk2c} to insert
+code to instrument for profiling.
+
+\item[\texttt{-cilk-span}\\] Instruct \texttt{cilk2c} to
+insert code to instrument for measuring span (critical-path length).
+Requires \texttt{-cilk-profile}.
+
+\item[\texttt{-cilk-debug}\\] Instruct \texttt{cilk2c} to insert code
+to instrument for profiling.
+
+\item[\texttt{-cilk-hint}\\] Instruct \texttt{cilk2c} to insert `hint'
+code.  The behavior of this option is currently undocumented.
+
+\item[\texttt{-save-temps}\\] Save all the intermediate files.
+
+Normally when compiling \texttt{foo.cilk}, the \texttt{.cilki, .cilkc,
+.i, .o,} and other temporary files are written into a temporary
+directory such as \texttt{/var/tmp} (which the user can control by
+setting one of these environment variables: \texttt{TMPDIR},
+\texttt{TMP}, \texttt{TEMP}.)  After compilation, the temporary files
+are deleted.
+
+When you use \texttt{-save-temps}, the files would be saved as
+\texttt{foo.cilki}, \texttt{foo.cilkc}, etc., and would not be
+deleted.
+
+\item[\texttt{-M}\\] Produce dependency rules (see the option for \texttt{-M} to gcc).
+\item[\texttt{-MM}\\] Produce dependency rules (see the option for \texttt{-MM} to gcc).
+\item[\texttt{-I<directory>}\\] Add the directory to the head of the list of directories to be searched for header files.
+\item[\texttt{-D<argument>}\\] Pass the \texttt{-D<argument>} to the preprocessor.
+\item[\texttt{-A<argument>}\\] Pass to the preprocessor.
+\item[\texttt{-include<argument>}\\] Pass to the preprocessor.
+\item[\texttt{-Wp,<argument>}\\] Pass to the preprocessor.
+
+\item[\texttt{-g}\\] Pass to gcc (produce symbol table information).
+\item[\texttt{-O<argument>}\\] Pass to gcc (optimize, e.g.,
+\texttt{-O2}).
+\item[\texttt{-Wl,<argument>}\\] Pass to gcc, which will pass it to the linker.
+\item[\texttt{-Wc,<argument>}\\] Strip the \texttt{-Wc,} and pass to the C compiler.  Useful if your C compiler accepts a command the \texttt{cilkc} doesn't understand.
+\item[\texttt{-Wall} or \texttt{-W}] Pass to gcc, and pass \texttt{-W5} to \texttt{cilk2c}.
+\item[\texttt{-W<n>} (for $1\leq{}n\leq{}5$)] Pass to \texttt{cilk2c}.
+\item[\texttt{-W<argument>} (not matching the above)] Pass to gcc.
+\item[\texttt{-l<argument>}\\] Pass to gcc, to specify a library to link.
+\item[\texttt{-L<argument>}\\] Pass to gcc, to specify a directory to
+look for libraries in.
+\item[\texttt{-static}\\] Pass to gcc, to specify that static linking should be used.
+\item[\texttt{-n}\\]  Do not actually do any compilation.  Useful with \texttt{-v}.
+
+\item[\texttt{-m*<argument>}\\] machine-specific options, passed to
+gcc.  (If you specify this argument and are not using the right kind
+of machine, you may get unspecified behavior.)  The \texttt{-m}
+argument is passed to the preprocessor and to gcc.
+
+%\item[\texttt{-nd}] Not-quite-working nondeterminator support.
+%\item[\texttt{-notrans}]  Don't transform the cilk2c
+%\item[\texttt{-elide}] E
+
+\item[\texttt{--param <argument>}\\] Pass the arguments through to the compiler.
+\item[\texttt{-o <file>}\\] Specify where to write the output.
+\item[\texttt{-x <lang>}\\] Specify the input language for the rest of the files.
+
+Normally, the compiler determines the input language from the file
+suffix.  For example, files named \texttt{*.cilk} are assumed to be
+Cilk files.  However, you can explicitly specify the language with
+\texttt{-x}, which specifies the input language of the files that follow, on the command line, the \texttt{-x} argument.  The languages are:
+\begin{center}
+\begin{tabular}{llp{3in}}
+\texttt{-x} argument & equivalent file suffix & file type \\\hline
+\texttt{-x cilk}     & \texttt{.cilk} & Cilk,      \\
+\texttt{-x cilki}    & \texttt{.cilki} & preprocessed Cilk,  \\
+\texttt{-x cilkc}    & \texttt{.cilkc} & C transformed from Cilk (to be preprocessed again),  \\
+\texttt{-x c}        & \texttt{.c} & C,  \\
+\texttt{-x objective-c} & \texttt{.m} & Objective C,  \\
+\texttt{-x c++} & \texttt{.C},\texttt{.cc},\texttt{.cxx},\texttt{.cpp} & C++,  \\
+\texttt{-x c-header} & \texttt{.h} & C header,  \\
+\texttt{-x cpp-output} & \texttt{.i} & Completely preprocessed C,  \\
+\texttt{-x c++cpp-output} & \texttt{.ii} & Completely preprocessed C++,  \\
+\texttt{-x assembler} & \texttt{.s} & assembler,  \\
+\texttt{-x assembler-with-cpp} & \texttt{.S} & assembler to be preprocessed first,  \\
+\texttt{-x none} & & revert to normal suffix rules.  \\
+\end{tabular}
+\end{center}
+
+\item[\texttt{-help}\\] Print help and quit.  We try to keep this
+document up-to-date but differences could creep in between this
+document, the output of -help, and the actual behavior.  Such
+differences constitute bugs, so let us know if you notice any.
+\item[\texttt{-version}\\] Print version and quit.
+\end{description}
+
+Like \texttt{gcc}, you may not run arguments together.  Thus
+\texttt{-Ec} is not the same as \texttt{-E -c}.
+
+Example:  You can write things like
+\begin{verbatim}
+ cilkc foo.c bar.i zot.cilk hello.s quux.o -lm -o prog -O2 -g -DFOO
+\end{verbatim}
+which will cause 
+\begin{itemize}
+\item \texttt{foo.c} to be preprocessed and compiled, and assembled,
+\item \texttt{bar.i} to be compiled and assembled without preprocessing,
+\item \texttt{hello.s} to be preprocessed and assembled,
+\item \texttt{zot.cilk} to be preprocessed, transformed, and compiled, and assembled, and
+\item then all of the resulting compiled files (including
+\texttt{quux.o}) to be linked together with the math library
+(\texttt{-lm}) and written to a program called \texttt{prog}.
+\item The preprocessing will be performed with the \texttt{FOO} macro defined, and the compilation will performed with level 2 optimization and symbol tables.
+\end{itemize}
+
+We are {\em compassionate compiler writers}: We like you.  We really
+like you. We want you to be able to compile your programs using all
+the standard arguments to \texttt{gcc}.  But we can't.  And we feel
+terrible about it.  But seriously folks... We have chosen not to
+accept every argument that \texttt{gcc} accepts.  Instead, we accept
+only the arguments described above.  If you find an argument that
+should be accepted, but is not, let us know.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Cilk and C}
+\label{sec:cilk-c}
+
+Cilk uses a source-to-source compiler, including a type-checking
+preprocessor that translates Cilk code into C code.  You can
+incorporate C functions into Cilk code, but there are certain
+restrictions on how Cilk and C can interact.  
+
+A Cilk procedure can call a C function, but C functions cannot directly
+spawn or call Cilk procedures. However, C functions can call special
+automatically-generated stub functions that in turn spawn Cilk procedures.
+For example, suppose that the C function \texttt{f} needs to invoke
+a Cilk procedure \texttt{g} that accepts a \texttt{double} argument
+and returns a \texttt{float}. To invoke \texttt{g}, \texttt{f} first
+creates a \texttt{CilkContext} object by calling a Cilk-run-time-library
+function, \texttt{Cilk\_init}, as shown in \figref{cilk-from-c}.
+It then invokes the automatically-generated
+stub for \texttt{g}, which is called \texttt{EXPORT(g)}. It needs to pass
+the stub both the pointer to the \texttt{CilkContext} object, and the
+argument to \texttt{g}, a \texttt{double}. After
+\texttt{EXPORT(g)} returns, \texttt{f} can release the resources
+associated with the \texttt{CilkContext} object by calling
+\texttt{Cilk\_terminate}, or it can use it to call additional
+stubs. \texttt{Cilk\_init} has two arguments, \texttt{int* argc} and
+\texttt{char* argv[]}, which are similar to the arguments to
+\texttt{main} except that \texttt{argc} is passed by reference, so
+that Cilk can consume the arguments that it understands from
+\texttt{argc/argv}. The arguments to \texttt{Cilk\_init} allows
+\texttt{f} to control the behavior of the Cilk run-time system in
+exactly the same way that command-line arguments control the behavior
+of Cilk in a program whose \texttt{main} is a Cilk procedure.  The C
+function \texttt{f} can be defined in a Cilk source (\texttt{.cilk}
+extension) or in a C source; in either case, you must include
+\texttt{cilk.h}.
+
+\begin{figure}
+\centering
+\begin{minipage}{.45\textwidth}
+\footnotesize
+\begin{verbatim}
+#include <cilk.h>
+
+cilk float g (double x)
+{ 
+    /* do something */
+}
+
+cilk void h (int i)
+{
+    float y;
+
+    y = spawn g (2.7);
+    sync;
+}
+
+int main (int argc, char *argv[])
+{
+    float        y;
+    CilkContext* context;
+
+    context = Cilk_init (&argc, argv);
+
+    y = EXPORT(g) (context, 3.14);
+
+    Cilk_terminate (context);
+
+    return 0;
+}
+\end{verbatim}
+\centerline{\textbf{(a)}}
+\end{minipage}\hspace{.05\textwidth}
+\begin{minipage}{.4\textwidth}
+\footnotesize
+\begin{verbatim}
+#include <cilk.h>
+
+extern float EXPORT(g) (CilkContext* context, 
+                        double x);
+
+void f ()
+{
+    char* argv[] = { "f", "--nproc", "4", 0 };
+    int   argc   = 3;
+
+    float        y;
+    double       x = 0.0;
+    CilkContext* context;
+
+    context = Cilk_init (&argc, argv);
+
+    y = EXPORT(g) (&x);
+
+    Cilk_terminate (context);
+}
+\end{verbatim}
+\centerline{\textbf{(b)}}
+\end{minipage}
+\caption{\small \textbf{(a)} A Cilk program with a C \texttt{main} that
+invokes a Cilk procedure \texttt{g} using a stub. Note that \texttt{g}
+can also be spawned by other Cilk procedures.
+\textbf{(b)} A C source file with a C function \texttt{f} that
+invokes \texttt{g} from \textbf{(a)} using the stub.}
+\label{fig:cilk-from-c}
+\end{figure}
+
+Creating a Cilk context causes operating-system resources (namely threads)
+to be allocated, so this operation can incur considerable overhead. Therefore,
+reusing cilk context is more efficient than creating and terminating a
+context for each stub invocation. Cilk contexts are thread safe, so you
+can create a Cilk context and start a Cilk computation, or even several
+ones concurrently, in a multithreaded C or C++ program.
+
+Thread-safe functions from system libraries also work when called from
+Cilk.  The exact set of thread-safe functions is system dependent, but
+POSIX threads are now common enough that most libraries work fine
+with threads.  One such library is \texttt{glibc-2.1}, which is
+installed on most GNU/Linux systems.  
+
+The function \texttt{alloca} is not thread-safe.  See
+\secref{lib-alloca} for a description of a thread-safe replacement
+called \texttt{Cilk\_alloca}.
+
+Up to version 5.2, Cilk defined special versions of certain
+commonly-used functions.  For example, Cilk-5.2 defined
+\texttt{Cilk\_malloc}, which was guaranteed to work on all systems, as
+opposed to \texttt{malloc}.  Cilk-5.2 provided a header file
+\texttt{cilk-compat.h}, which defined \texttt{X} to be
+\texttt{Cilk\_X} for all redefined functions \texttt{X}.  This
+cumbersome mechanism is now deprecated, and \texttt{cilk-compat.h} is
+no longer supported.  Use \texttt{malloc} instead of
+\texttt{Cilk\_malloc}.
+
+As of version 5.4, there is a new header file suffix: \texttt{.cilkh}.
+The Cilk compiler will expect the contents of a file named
+\texttt{*.h}, such as \texttt{foo.h}, to be pure C with no Cilk
+keywords, whereas a file named \texttt{*.cilkh} may contain Cilk
+keywords.  If you have a \texttt{.h} file that you want to insert some Cilk into, use this pragma
+\begin{verbatim}
+#pragma lang +cilk
+\end{verbatim}
+which switches the parser to Cilk mode.  To switch back to C mode you can write
+\begin{verbatim}
+#pragma lang -cilk
+\end{verbatim}
+or
+\begin{verbatim}
+#pragma lang +c
+\end{verbatim}
+in your file.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Storage allocation}
+\indexalloc{|(}
+\label{sec:storage}
+
+Like the C language on which it is based, Cilk provides two types of
+memory: stack and heap.  Stack memory is allocated by the compiler for
+procedure-local variables and arrays, or you can allocate stack memory
+with the \texttt{Cilk\_alloca()} library function available in
+\texttt{cilk-lib.h}.  Stack memory is automatically deallocated when
+the Cilk procedure or C function that allocated the memory returns.
+Heap memory is allocated by the usual \texttt{malloc()} library
+function and deallocated with \texttt{free()}.  
+
+\subsection{Stack memory}
+\label{sec:cactus}
+\indexsub{shared memory}{cactus stack}{|(textbf}
+
+Cilk uses a \defn{cactus stack} \cite{Moses70} for stack-allocated
+storage, such as the storage needed for procedure-local variables.  As
+shown in \figref{cactus}, from the point of view of a single Cilk
+procedure, a cactus stack behaves much like an ordinary stack.  The
+procedure can allocate and free memory by pushing and popping the
+stack.  The procedure views the stack as extending back from its own
+stack frame to the frame of its parent and continuing to more distant
+ancestors.  The stack becomes a cactus stack when multiple procedures
+execute in parallel, each with its own view of the stack that
+corresponds to its call history, as shown in \figref{cactus}.
+
+\begin{figure}
+\centerline{\image{cactus}{3.5cm}}
+\caption{\small A cactus stack.  Procedure A spawns B and C, and B
+spawns D and~E\@.  The left part of the figure shows the spawn tree,
+and the right part of the figure shows the view of the stack by the
+five procedures.  (The stack grows downward.)}
+\label{fig:cactus}
+\end{figure}
+
+Cactus stacks in Cilk have essentially the same limitations as
+ordinary C stacks~\cite{Moses70}.  For instance, a child procedure
+cannot return to its parent a pointer to an object that it has
+allocated, since the object will be deallocated automatically when the
+child returns.  Similarly, sibling procedures cannot reference each
+other's local variables.  Just as with the C stack, pointers to
+objects allocated on the cactus stack can only be safely passed to
+procedures below the allocation point in the call tree.
+
+\indexfn{alloca@\texttt{alloca}}{|(}
+\indexfn{Cilkalloca@\texttt{Cilk\_alloca}}{|(}
+You can allocate {\tt size} bytes of storage on the stack by calling
+the C library function {\tt Cilk\_alloca}:
+\begin{verbatim}
+        ptr = Cilk_alloca(size);
+\end{verbatim}
+Memory allocated by {\tt Cilk\_alloca} is freed when the procedure in
+which it was called returns.
+
+In the current release, Cilk's version of \texttt{Cilk\_alloca()} does
+not work properly when it is called from within a C function.
+Similarly, the C function \texttt{alloca()} does not work properly
+when called within a Cilk procedure.
+
+
+\subsection{Heap memory}
+
+\indexfn{malloc@\texttt{malloc}}{|(}
+\indexfn{free@\texttt{free}}{|(}
+\indexfn{Cilkmalloc@\texttt{Cilk\_malloc}}{|(}
+\indexfn{Cilkfree@\texttt{Cilk\_free}}{|(}
+To allocate heap storage, you call
+\begin{verbatim}
+        ptr = malloc(size);
+\end{verbatim}
+which allocates \texttt{size} bytes out of heap storage and returns a
+pointer to the allocated memory.  The memory is not cleared.  Heap
+storage persists until it is explicitly freed:
+\begin{verbatim}
+        free(ptr);
+\end{verbatim}
+where \texttt{ptr} is a pointer previously returned by a call to
+\texttt{malloc()}. Unlike storage allocated by
+\texttt{Cilk\_alloca()}, a pointer to storage allocated by
+\texttt{malloc()} can be safely passed from a child procedure to
+its parent.
+\indexfn{Cilkmalloc@\texttt{Cilk\_malloc}}{|)}
+\indexfn{Cilkfree@\texttt{Cilk\_free}}{|)}
+\indexfn{malloc@\texttt{malloc}}{|)}
+\indexfn{free@\texttt{free}}{|)}
+\indexalloc{|)}
+
+\note{Document our fast malloc here.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Shared memory}
+\label{sec:shared}\index{memory consistency|see{shared memory}}
+
+Cilk supports shared memory.  Sharing occurs when a global variable is
+accessed by procedures operating in parallel, but sharing can also
+arise indirectly from the passing of pointers to spawned procedures,
+allowing more than one procedure to access the object addressed by the
+pointer.  (Cilk supports the same semantics for pointer passing
+as~C\@.  See \secref{storage}.)  Updating shared objects in parallel
+can cause nondeterministic anomalies to arise, however.  Consequently,
+it is important to understand the basic semantics of Cilk's
+shared-memory model.
+
+Before delving into the semantics of shared memory, let us first see
+how sharing might occur in a Cilk program and what anomalies might
+arise.  \figref{shared-legal} shows two Cilk procedures,
+\texttt{foo()} and \texttt{bar()}.  In this example, \texttt{foo()}
+passes variable \texttt{x} to \texttt{bar()} by reference, and then it
+proceeds to read \texttt{x} before the
+\texttt{sync}.\footnote{Actually, the \texttt{sync} statement in
+\texttt{foo()} is redundant, since the \texttt{return} statement
+implicitly imposes a \texttt{sync} immediately before the actual
+return.}\ \ Concurrently, \texttt{bar()} reads~\texttt{x} through the
+pointer~\texttt{px}.  This way of sharing the value of~\texttt{x} is
+safe, because the shared variable~\texttt{x} is assigned in
+\texttt{foo()} before \texttt{bar()} is spawned, and no write accesses
+happen on \texttt{x} thereafter.
+
+\indexrace{|(textbf} \figref{shared-race} shows a slightly modified
+version of the Cilk procedures in \figref{shared-legal}.  Here,
+\texttt{foo()} passes the variable \texttt{x} to \texttt{bar()} by
+reference, but now it proceeds to modify \texttt{x} itself before the
+\texttt{sync}.  Consequently, it is not clear what value
+\texttt{bar()} will see when it reads~\texttt{x} through pointer
+\texttt{px}: the value at the time the variables were passed, the
+value after \texttt{foo()} has modified them, or something else.
+Conversely, it is not clear which value of~\texttt{x} \texttt{foo()}
+will see.  This situation is called a \defn{data race}, and it leads
+to nondeterministic behavior of the program.  In most cases,
+nondeterminism of this sort is undesirable and probably represents a
+programming error.  \index{data race}
+
+\begin{figure*}
+\begin{center}
+\begin{minipage}[t]{.48\linewidth}
+\small
+\begin{verbatim}
+   cilk int foo (void)
+   {
+     int x = 0, y;
+
+     spawn bar(&x);
+     y = x + 1;
+     sync;
+     return (y);
+   }
+
+   cilk void bar (int *px)
+   {
+     printf("%d", *px + 1);
+     return;
+   }
+\end{verbatim}
+\caption{\small Passing the spawned procedure \texttt{bar} an argument
+consisting of a pointer to the variable \texttt{x} leads to the
+sharing of~\texttt{x}.}
+\label{fig:shared-legal}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{.48\linewidth}
+\small
+\begin{verbatim}
+   cilk int foo (void)
+   {
+     int x = 0;
+
+     spawn bar(&x);
+     x = x + 1;
+     sync;
+     return (x);
+   }
+
+   cilk void bar (int *px)
+   {
+     *px = *px + 1;
+     return;
+   }
+\end{verbatim}
+\caption{\small Nondeterministic behavior may result from shared access to
+the variable \texttt{x} when \texttt{x} is updated.}
+\label{fig:shared-race}
+\end{minipage}
+\end{center}
+\end{figure*}
+
+The easiest way to deal with the anomalies of shared access is simply
+to avoid writing code in which one thread modifies a value that might be
+read or written in parallel by another thread.  If you obey this rule,
+Cilk's shared-memory model guarantees that your program will
+deterministically produce the same values for all variables, no matter
+how the threads are scheduled.  Determinacy is a goal to be strived
+for in parallel programming, although sometimes more parallelism can
+be obtained with a nondeterministic algorithm.
+
+In some circumstances you may find you need to cope with the
+intricacies of sharing.  In that case, you will need to understand
+something about the \defn{memory-consistency model} of the machine on
+which you are running.  For example, \figref{Dijkstra} shows an
+example that could get you into trouble.  If you reason through the
+logic of the program, you will see that the value printed for
+\texttt{z} can be either 0 or 1, but not~2.  Nevertheless, the value 2
+may occasionally be printed on many contemporary SMP's.  The reason is
+that some processors and compilers allow in \texttt{foo} the value
+\texttt{x} to be written after the value of \texttt{y} is read, since
+they refer to different locations.  In a one-processor system, this
+change in the order of execution has no bearing on the correctness of
+the code, but on a multiprocessor anomalous results can occur, such as
+in this example, the printing of the value 2 for~\texttt{z}.
+
+\note{Check example carefully for correctness.  After all, CEL wrote it!}
+\begin{figure}
+\begin{center}
+\begin{minipage}{11cm}
+\begin{verbatim}
+   int x = 0, y = 0, z = 0;
+
+   cilk void foo()
+   {
+      x = 1;
+      if (y==0) z++;
+   }
+
+   cilk void bar()
+   {
+      y = 1;
+      if (x==0) z++;
+   }
+
+   cilk int main ()
+   {
+      spawn foo();
+      spawn bar();
+      sync;
+      printf("z = %d\n", z);
+      return 0;
+   }
+\end{verbatim}
+\end{minipage}
+\end{center}
+\caption{\small An example of the subtleties of memory consistency.}
+\label{fig:Dijkstra}
+\end{figure}
+
+\indexsymmetfn{shared memory}{Cilkfence@\texttt{Cilk\_fence}}{|(} As
+an aid to portability, Cilk provides a primitive
+\texttt{Cilk\_fence()} that guarantees that all memory operations of a
+processor are committed before the next instruction is executed.
+Moreover, the compiler guarantees not to reorder operations across a
+\texttt{Cilk\_fence()}.  In the example from \figref{Dijkstra}, the
+printing of the anomalous value of 2 can be precluded by inserting a
+\texttt{Cilk\_fence()} after the statement \texttt{x = 1;} in
+procedure \texttt{foo} and after the statement \texttt{y = 1;} in
+procedure \texttt{bar}.  The fence forces each procedure to recognize
+the values written by the other in the proper fashion.
+
+\indexsub{shared memory}{consistency models}{} If the machine on which
+you run Cilk supports a given memory-consistency model, you are free
+to use it.  You should be aware, however, that a different consistency
+model can cause your code not to port to another computer.
+
+\indexsymmetfn{shared memory}{Cilkfence@\texttt{Cilk\_fence}}{|)}
+\indexrace{|)textbf}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Locking}
+\label{sec:locking}
+\index{atomicity!locks|see{locks}}
+\index{locks!using|(}
+\indextype{Cilklockvar@\texttt{Cilk\_lockvar}}{|(}
+\indexfn{Cilklockinit@\texttt{Cilk\_lock\_init}}{|(}
+\indexfn{Cilklock@\texttt{Cilk\_lock}}{|(}
+\indexfn{Cilkunlock@\texttt{Cilk\_unlock}}{|(}
+
+Cilk provides mutual exclusion locks that allow you to create atomic
+regions of code.  A lock has type \texttt{Cilk\_lockvar}.  The two
+operations on locks are \texttt{Cilk\_lock} to test a lock and block
+if it is already acquired, and \texttt{Cilk\_unlock} to release a
+lock.  Both functions take a single argument which is an object of
+type \texttt{Cilk\_lockvar}.\footnote{Prior to Cilk release~5.2, the
+argument to these functions was a pointer to an object of type
+\texttt{Cilk\_lockvar}, not an object of type \texttt{Cilk\_lockvar}
+itself.  We changed the prototype of these functions so that an
+ampersand (\texttt{\&}) is not normally needed when calling them.}\ \
+Acquiring and releasing a Cilk lock has the memory consistency
+semantics of release consistency \cite[p.~716]{HennessyPa96}.  The
+lock object must be initialized using \texttt{Cilk\_lock\_init()}
+before it is used.  The region of code between a \texttt{Cilk\_lock}
+statement and the corresponding \texttt{Cilk\_unlock} statement is
+called a \defn{critical section}.  \index{critical section|textbf}
+
+Here is an example:
+
+\begin{verbatim}
+     #include <cilk-lib.h>
+           :
+           :
+     Cilk_lockvar mylock;
+           :
+           :
+     { 
+        Cilk_lock_init(mylock);
+           :
+        Cilk_lock(mylock); /* begin critical section */
+           :
+           :
+        Cilk_unlock(mylock); /* end critical section */
+     }
+\end{verbatim}
+
+
+\textbf{\textit{Warning:} Locks must be initialized!}  Make sure you
+initialize your locks before you use them.
+\indexfn{Cilkunlock@\texttt{Cilk\_unlock}}{|)}
+\indexfn{Cilklock@\texttt{Cilk\_lock}}{|)}
+\indexfn{Cilklockinit@\texttt{Cilk\_lock\_init}}{|)}
+\indextype{Cilklockvar@\texttt{Cilk\_lockvar}}{|)}
+
+\index{locks!using|)}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Advanced features}
+\label{sec:advanced}
+
+This section introduces some of the advanced parallel programming
+features of Cilk.  \secref{inlets} introduces ``inlets'' as a means of
+incorporating a returned result of child procedures into a procedure
+frame in nonstandard ways.  Cilk allows you to abort already-spawned
+work, a facility which is described in \secref{abort}.
+Finally, \secref{synched} shows how a procedure can interact with Cilk's
+scheduler to test whether it is ``synched'' without actually executing
+a \texttt{sync}. 
+
+\indexsub{shared memory}{dag consistency}{|)}
+
+\subsection{Inlets}
+\index{inlets|(}
+\index{scheduling!inlets|see{inlets}}
+\label{sec:inlets}
+
+Ordinarily, when a spawned procedure returns a value, it is simply
+stored into a variable in its parent's frame:
+\begin{verbatim}
+x = spawn foo(y);
+\end{verbatim}
+Occasionally, you may find you want to incorporate the returned value
+into the parent's frame in a more complex way.  Cilk provides an
+\defn{inlet} feature for this purpose. Inlets are
+inspired in part by the inlet feature of TAM~\cite{CullerSaSc91}.
+
+An inlet is essentially a C function internal to a Cilk procedure.
+Normally in Cilk, the spawning of a procedure must occur as a
+separate statement and not in an expression.  An exception is made to
+this rule if the spawn is performed as an argument to an inlet.  In
+this case, the procedure is spawned, and when it returns, the inlet
+is invoked.  In the meantime, control of the parent procedure proceeds
+to the statement following the inlet.
+
+\begin{figure}[t]
+\begin{center}
+\begin{minipage}{.6\linewidth}
+\small
+\begin{verbatim}
+cilk int fib (int n)
+{
+    int x = 0;
+    inlet void summer (int result)
+    {
+        x += result;
+        return;
+    }
+
+    if (n<2) return n;
+    else {
+        summer(spawn fib (n-1));
+        summer(spawn fib (n-2));
+        sync;
+        return (x);
+    }
+}
+\end{verbatim}
+\end{minipage}
+\end{center}
+\caption{\small Using an inlet to compute the $n$th Fibonnaci number.}
+\label{fig:inlet-fib}
+\end{figure}
+
+\figref{inlet-fib} illustrates how the \texttt{fib()} function might
+be coded using inlets.  The inlet \texttt{summer()} is defined to take
+a returned value \texttt{result} and add it to the variable \texttt{x}
+in the frame of the procedure that does the spawning.  All the
+variables of \texttt{fib()} are available within \texttt{summer()},
+since it is an internal function of \texttt{fib()}.
+
+Since an inlet is like a C function, it obeys the restrictions of C
+functions (see \secref{cilk-c}) in that it cannot contain
+\texttt{spawn} or \texttt{sync} statements.  It is not entirely like a
+C function, because as we shall see, Cilk provides certain special
+statements that may only be executed inside of inlets.  Because inlets
+cannot contain \texttt{spawn} or \texttt{sync} statements, they
+consist of a single Cilk thread.
+
+\indexsubt{scheduling}{inlets}{atomicity}{|(} \indexsub{shared
+  memory}{dag consistency}{|(} It may happen that an inlet is
+operating on the variables of a procedure frame at the same time when
+the procedure itself or other inlets are also operating on those
+variables.  Consequently, it is important to understand the effects of
+these interactions.  \emph{Cilk guarantees that the threads of a
+  procedure instance, including its inlets, operate atomically with
+  respect to one another.}  In other words, you need not worry that
+variables in a frame are being updated by another thread while you are
+updating variables in the frame.  This implicit atomicity of threads
+makes it fairly easy to reason about concurrency involving the inlets
+of a procedure instance without locking, declaring critical regions,
+or the like.  On the other hand, Cilk guarantees nothing more than dag
+consistency \note{We use the term ``dag consistency'' here, but it has
+  not yet been defined. -- Bruce} in the interaction between two
+threads belonging to two different procedure instances.  \emph{Do not
+  assume that threads of different procedure instances operate
+  atomically with respect to each other.}  \indexsub{shared
+  memory}{dag consistency}{|)}
+\indexsubt{scheduling}{inlets}{atomicity}{|)}
+
+In principle, inlets can take multiple spawned arguments, but Cilk
+currently has the restriction that exactly one argument to an inlet
+may be spawned and that this argument must be the first argument.
+This limitation is easy to program around.  If one wishes two separate
+arguments to be spawned, each spawn can be wrapped with its own inlet
+that incorporates its return value into the procedure frame.
+
+\begin{figure}[t]
+\begin{center}
+\begin{minipage}{.6\linewidth}
+\small
+\begin{verbatim}
+cilk int fib (int n)
+{
+    int x = 0;
+
+    if (n<2) return n;
+    else {
+        x += spawn fib (n-1);
+        x += spawn fib (n-2);
+        sync;
+        return (x);
+    }
+}
+\end{verbatim}
+\end{minipage}
+\end{center}
+\caption{\small Using implicit inlets to compute the $n$th Fibonnaci number.}
+\label{fig:implicit-inlet-fib}
+\end{figure}
+
+\defn{Implicit inlets}\indexcat{inlets}{implicit}{|textbf} are used by
+Cilk to support the accumulation of a result returned by a spawned
+procedure.  \figref{implicit-inlet-fib} shows how the \texttt{fib()}
+function might be coded using implicit inlets.  The accumulating
+assignment operator \texttt{+=} together with a \texttt{spawn}
+generates an implicit inlet definition and invocation by the Cilk
+compiler.  \index{inlets|)}
+
+Explicit inlets may not be mixed with implicit inlets on the same \texttt{spawn}.  For example, you cannot write
+\begin{verbatim}
+  x += summer(spawn fib(n-1));
+\end{verbatim}
+because the implicit inlet for the \texttt{+=} is being combined with
+an explicit inlet \texttt{summer}.  Hence the only meaningful return
+type for an inlet is the \texttt{void} type.
+
+\subsection{Aborting work}
+\indexsub{scheduling}{aborting work}{|(}
+\indexkw{abort}{|(}
+\label{sec:abort}
+
+Sometimes, a procedure spawns off parallel work which it later
+discovers is unnecessary.  This ``speculative'' work can be aborted in
+Cilk using the \texttt{abort} primitive inside an inlet.  A common use
+of \texttt{abort} occurs during a parallel search, where many
+possibilities are searched in parallel.  As soon as a solution is
+found by one of the searches, one wishes to abort any currently
+executing searches as soon as possible so as not to waste processor
+resources.
+
+The \texttt{abort} statement, when executed inside an inlet, causes
+all of the already-spawned children of the procedure to terminate.
+Cilk does not guarantee that all children will be aborted instantly,
+however.  For example, due to the vagaries of scheduling, a child may
+terminate normally after the \texttt{abort} statement is executed.
+Moreover, Cilk makes no promises regarding the return values of
+aborted children. If you use \texttt{abort}, it is your responsibility
+to handle the effects of premature termination.\note{What exactly does
+  it mean to say that Cilk makes no promises?  Cilk does promise to
+  return some value of the appropriate type, right?  It just doesn't
+  promise any particular value. -- Bruce}
+
+\figref{queens} illustrates how \texttt{abort} can be used in a
+program to solve the $n$-queens puzzle. The goal of the puzzle is to
+find a configuration of $n$ queens on an $n \times n$ chessboard such
+that no queen attacks another (that is, no two queens occupy the same
+row, column, or diagonal).  The idea is to use a backtracking search
+to explore the tree of possible configurations.  As soon as a solution
+is found, the search is terminated using the \texttt{abort} primitive.
+
+\begin{figure}
+\centering
+\begin{minipage}{.45\textwidth}
+\scriptsize
+\begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cilk-lib.h>
+#include <cilk-compat.h>
+
+int safe(char *config, int i, int j)
+{
+   int r, s;
+
+   for (r=0; r<i; r++) {
+      s = config[r];
+      if (j==s || i-r==j-s || i-r==s-j) 
+         return 0;
+  }
+  return 1;
+}
+
+cilk char *nqueens(char *config, int n, int i)
+{
+  char *new_config;
+  char *done = NULL;
+  int  j;
+  
+  inlet void catch(char *res)
+  {
+    if (res != NULL) {
+      if (done == NULL)
+        done = res;
+      abort;
+    }
+  }
+
+  if (i==n) {
+    char *result;
+
+    /* put this good solution in heap, 
+       and return a pointer to it */
+    result = malloc(n*sizeof(char));
+    memcpy(result, config, n*sizeof(char));
+    return result;
+  }
+\end{verbatim}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+\scriptsize
+\begin{verbatim}
+  /* try each possible position for queen <i> */
+  for (j=0; j<n; j++) {
+    /* allocate a temporary array and 
+     * copy the config into it */
+    new_config = Cilk_alloca((i + 1) * sizeof(char));
+    memcpy(new_config, config, i*sizeof(char));
+    if (safe(new_config, i, j)) {
+      new_config[i] = j;
+      catch(spawn nqueens(new_config, n, i+1));
+    }
+      
+    if (done != NULL)
+      break;
+  }
+  sync;
+  
+  return done;
+}
+
+cilk int main(int argc, char *argv[])
+{
+  int  n, i;
+  char *config;
+  char *result;
+  
+  if (argc < 2) {
+    printf("%s: number of queens required\n", argv[0]);
+    return 1;
+  }
+  
+  n = atoi(argv[1]);
+  config = Cilk_alloca(n * sizeof(char));
+
+  printf("running queens %d\n", n);
+  result = spawn nqueens(config, n, 0);
+  sync;
+
+  if (result != NULL) {
+    printf("Solution: ");
+    for (i=0; i<n; i++)
+      printf("%2d ", result[i]);
+    printf("\n");
+  }
+  else
+    printf("No solutions!\n");
+  
+  return 0;
+}
+\end{verbatim}
+\end{minipage}
+\caption{\small Using an inlet with \texttt{abort} to find a solution
+to the $n$-queens puzzle.}
+\label{fig:queens}
+\end{figure}
+
+The Cilk procedure \texttt{nqueens} is called with three arguments:
+\texttt{config}, the current configuration of queens on the chess
+board; \texttt{n}, the total number of queens; and \texttt{i}, the
+number of queens which have already been placed on the chess board.
+The \texttt{spawn} in the \texttt{for} loop of \texttt{nqueens} causes
+searches of configurations starting from different columns of the
+current row to be spawned off in parallel.  The C function
+\texttt{safe}, which checks whether the queen position at column
+\texttt{j} conflicts with other queens already set on the board,
+determines whether a given subsearch is spawned.  Whenever one of the
+spawned subsearches completes, the inlet \texttt{catch} is executed,
+and the other subsearches are aborted if a solution has been found.
+Thus, when a solution has been discovered, the computation terminates.
+
+When programming speculative computations using \texttt{abort}, there
+are some anomalies about which you should be aware.  We have mentioned
+some of these anomalies: children may not be aborted instantly and
+control may be resumed at a \texttt{sync} without return values from
+aborted children having been set.  A more subtle problem is sketched
+in \figref{abort-anomaly}.
+
+\begin{figure}[t]
+\begin{center}
+\begin{minipage}{.5\linewidth}
+\small
+\begin{verbatim}
+cilk void baz(int n);
+
+cilk void foo(int n)
+{  
+    inlet void bar()
+    {
+        abort;
+    }
+  
+    bar(spawn baz(17));
+    spawn baz(28);
+    sync;
+}
+\end{verbatim}
+\end{minipage}
+\end{center}
+\caption{\small Illustration of an anomaly with the use of \texttt{abort}.}
+\label{fig:abort-anomaly}
+\end{figure}
+
+The procedure \texttt{foo} spawns two children: \texttt{baz(17)} and
+\texttt{baz(28)}.  The question is, when \texttt{baz(17)} returns, and
+the inlet executes the \texttt{abort} statement, is \texttt{baz(28)}
+aborted?  The answer is, it depends.  If \texttt{baz(28)} has already
+been spawned but has not yet completed, then it is aborted.  If
+\texttt{baz(28)} has not been spawned, then it will be spawned and
+will not be aborted.  In other words, \emph{{\tt abort} only aborts
+extant children, not future children}.  If you want to prevent future
+children from being spawned, you should set a flag in the inlet
+indicating that an \texttt{abort} has taken place, and then test that
+flag in the procedure before spawning a child.  Since threads that
+belong to the same procedure execute atomically with respect to each
+other (including the thread comprising an inlet), no race conditions
+can occur whereby the procedure tests the flag, an \texttt{abort}
+occurs within an inlet, and then the procedure spawns a
+child.
+\indexsub{scheduling}{aborting work}{|)}
+\indexkw{abort}{|)}
+
+\subsection{Interacting with Cilk's scheduler}
+\index{scheduling!interaction with|(}
+\indexkw{SYNCHED}{|(}
+\label{sec:synched}
+
+Cilk provides a simple means by which a procedure can determine
+whether it is ``synched'' without actually executing a \texttt{sync},
+which might cause the procedure to stall. The variable
+\texttt{SYNCHED} has value $1$ if the scheduler can guarantee that the
+procedure has no outstanding children and $0$ otherwise.\footnote{A
+child in not considered completed until all of its memory operations
+have completed.  For versions of Cilk with a relaxed memory
+implementation, the completion of writes may occur well after the last
+instruction of the child is executed.}
+
+By testing \texttt{SYNCHED}, you can sometimes conserve space
+resources and obtain better locality than if you were completely
+oblivious to Cilk's scheduler.  \figref{synched} illustrates such a
+use of \texttt{SYNCHED}.  The figure shows a Cilk procedure fragment
+in which two child procedures \texttt{foo} and \texttt{bar} are
+spawned.  For each child, the procedure must allocate some auxiliary
+storage on the stack before performing the spawn.  If the spawn of
+\texttt{foo} has completed executing before \texttt{bar} is spawned,
+however, then the space allocated for \texttt{foo} can be reused for
+\texttt{bar}.  By checking the variable \texttt{SYNCHED}, the
+procedure detects this situation, and the space is reused.  Otherwise,
+it allocates new space for \texttt{bar}.
+
+\begin{figure}[t]
+\begin{center}
+\begin{minipage}{.5\linewidth}
+\small
+\begin{verbatim}
+state1 = alloca(state_size);
+
+/* fill in *state1 with data */
+
+spawn foo(state1);
+
+if (SYNCHED)
+    state2 = state1;
+else
+    state2 = alloca(state_size);
+
+/* fill in *state2 with data */
+
+spawn bar(state2);
+
+sync;
+\end{verbatim}
+\end{minipage}
+\end{center}
+\caption{\small An illustration of the use of \texttt{SYNCHED} to save
+storage and enhance locality.}
+\label{fig:synched}
+\end{figure}
+
+The variable \texttt{SYNCHED} is actually more like a macro than an
+honest-to-goodness variable.  The Cilk type-checking preprocessor
+\cite{Miller95} actually produces two ``clones'' of each Cilk
+procedure: a ``fast'' clone that executes common-case serial code, and
+a ``slow'' clone that worries about parallel communication.  In the
+slow clone, which is rarely executed, \texttt{SYNCHED} inspects Cilk's
+internal state to determine if any children are outstanding.  In the
+fast clone, which is almost always executed, however, the value of
+\texttt{SYNCHED} is the constant~$1$.  Thus, for the fast clone,
+\texttt{cilk2c} translates any Cilk code that tests this variable into
+C code that tests against a constant.  The optimizer in the C compiler
+recognizes that this test can be performed at compile time, and thus
+the test in the fast clone takes zero runtime.
+\indexkw{SYNCHED}{|)}
+\index{scheduling!interaction with|)}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The Cilk model of multithreaded computation}
+\indexsub{scheduling}{model of computation}{|(}
+\index{computation, model of|(}
+\label{sec:model}
+
+Cilk supports an algorithmic model of parallel computation.
+Specifically, it guarantees that programs are scheduled efficiently by
+its runtime system.  In order to understand this guarantee better,
+this section surveys the major characteristics of Cilk's algorithmic
+model.
+
+Recall that a Cilk program can be viewed as a dag, as was illustrated
+in \figref{model}.  To execute a Cilk program correctly, Cilk's
+underlying scheduler must obey all the dependencies in the dag, since
+a thread cannot be executed until all the threads on which it depends
+have completed.  These dependencies form a partial order, permitting
+many ways of scheduling the threads in the dag.  The order in which
+the dag unfolds and the mapping of threads onto processors are crucial
+decisions made by Cilk's scheduler.  Every active procedure has
+associated state that requires storage, and every dependency between
+threads assigned to different processors requires communication.
+Thus, different scheduling policies may yield different space and time
+requirements for the computation.
+
+It can be shown that for general multithreaded dags, no good
+scheduling policy exists.  That is, a dag can be constructed for which
+any schedule that provides linear speedup also requires vastly more
+than linear expansion of space~\cite{BlumofeLe93}.  Fortunately, every
+Cilk program generates a well-structured dag that can be scheduled
+efficiently~\cite{BlumofeLe94}.
+
+The Cilk runtime system implements a provably efficient scheduling
+policy based on randomized
+\indexsub{scheduling}{work-stealing}{|textbf}\defn{work-stealing}.
+During the execution of a Cilk program, when a processor runs out of
+work, it asks another processor chosen at random for work to do.
+Locally, a processor executes procedures in ordinary serial order
+(just like C), exploring the spawn tree in a depth-first manner.  When
+a child procedure is spawned, the processor saves local variables of
+the parent on the bottom of a stack and commences work on the child.
+(Here, we use the convention that the stack grows downward, and that
+items are pushed and popped from the ``bottom'' of the stack.)  When
+the child returns, the bottom of the stack is popped (just like C) and
+the parent resumes.  When another processor requests work, however,
+work is stolen from the top of the stack, that is, from the end
+opposite to the one normally used by the worker.
+
+\indextim{|(} Cilk's work-stealing scheduler executes any Cilk
+computation in nearly optimal time.  From an abstract theoretical
+perspective, there are two fundamental limits to how fast a Cilk
+program could run.  Let us denote with $T_P$ the execution time of a
+given computation on $P$ processors.  The
+\defn{work}\indextimingnest{work}{|textbf} of the computation is the
+total time needed to execute all threads in the dag.  We can denote
+the work with $T_1$, since the work is essentially the execution time
+of the computation on one processor.  Notice that with $T_1$ work and
+$P$ processors, the lower bound $T_P\geq T_1/P$ must
+hold.\footnote{This abstract model of execution time ignores
+  memory-hierarchy effects, but is nonetheless quite
+  accurate~\cite{BlumofeJoKu95}.}  The second limit is based on the
+program's \defn{span}\indextimingnest{span}{|textbf}, 
+{|textbf}, denoted by~$T_{\infty}$, which is the execution time
+of the computation on an infinite number of processors, or
+equivalently, the time needed to execute threads along the longest
+path of dependency.  The second lower bound is simply $T_P\geq
+T_\infty$.
+
+Cilk's work-stealing scheduler executes a Cilk computation on $P$
+processors in time $T_P\leq T_1/P + O(T_{\infty})$, which is
+asymptotically optimal.  Empirically, the constant factor hidden by
+the big $O$ is often close to 1 or~2~\cite{BlumofeJoKu95}, and the
+formula
+\begin{equation}
+T_P \approx T_1/P + T_\infty \label{eq:model}
+\end{equation}
+is a good approximation of runtime.  This performance model holds for
+Cilk programs that do not use locks.  If locks are used, Cilk does not
+guarantee anything.  (For example, Cilk does not detect deadlock
+situations.)
+
+We can explore this performance model using the notion of
+\defn{parallelism}, which is defined as $\overline{P}=T_1/T_\infty$.
+The parallelism is the average amount of work for every step along the
+span.  Whenever $P\ll\overline{P}$, that is, the actual number of
+processors is much smaller than the parallelism of the application, we
+have equivalently that $T_1/P \gg T_\infty$.  Thus, the model predicts
+that $T_P \approx T_1/P$, and therefore the Cilk program is predicted
+to run with almost perfect linear speedup.  The measures of work and
+span provide an algorithmic basis for evaluating the performance of
+Cilk programs over the entire range of possible parallel machine
+sizes.  Cilk's timing instrumentation (see \secref{timers}) can
+measure these two quantities during a run of the program, no matter
+how many processors are used.
+
+We can bound the amount of space used by a parallel Cilk execution in
+terms of its serial space.  (We assume here that space is stack
+allocated and not heap allocated as is provided by the C library
+function \texttt{malloc}.)  Denote by $S_P$ the space required for a
+$P$-processor execution.  Then, $S_1$ is the space required for an
+execution on one processor.  Cilk's scheduler guarantees that for a
+$P$-processor execution, we have $S_P\leq S_1P$, which is to say one
+runtime stack per processor.  In fact, much less space may be required
+for many algorithms (see~\cite{BlumofeFrJo96b}), but the bound
+$S_P\leq S_1P$ serves as a reasonable limit.  This bound implies that,
+if a computation uses a certain amount of memory on one processor, it
+will use no more space per processor on average when run in parallel.
+
+The algorithmic complexity measures of work and span---together with
+the fact that you can count on them when designing your
+program---justifies Cilk as an \defn{algorithmic} multithreaded
+language\index{algorithmic multithreaded language}.  In addition,
+Cilk's scheduler also guarantees that the stack space used by a
+$P$-processor execution is never more than $P$ times the stack space
+of an equivalent one-processor execution, and sometimes, it can be
+much less.\indextim{|)} \indexsub{scheduling}{model of
+computation}{|)} \index{computation, model of|)}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{How to measure performance}
+\label{sec:perf-meas}
+
+The Cilk system can be configured to gather various runtime statistics
+as described in \secref{compile-run}.  Gathering those data imposes a
+performance penalty, however, as shown in \figref{speedup}.  There are
+two important reasons to measure execution time: to find out how fast
+the application is and to analyze what parts of an application are
+perhaps too slow.  In the first case, the absolute time is of critical
+importance, whereas in the second case, the relative time is more
+important.  Because measurements in Cilk perturb the program being
+measured, it is important to understand how to measure what you care
+about.
+
+Cilk can be configured to provide the following measurements.
+\begin{description}
+
+\item[Performance Measurement:] In order to measure execution time,
+Cilk should be used as follows.
+\begin{enumerate}
+\item \emph{Compile the application} using the \texttt{cilkc}
+  command without the flag \texttt{-cilk-profile}.
+\item \emph{Run the program} without bothering about the runtime
+  option \texttt{--stats} (see \secref{compile-run}).  Without the
+  \texttt{-cilk-profile} flag, Cilk only collects the total work and
+  the total running time.  Higher levels of the \texttt{--stats}
+  option do not provide significant insight.
+\end{enumerate}
+
+\item[Performance Analysis:] When tuning a Cilk program for
+  performance, various statistics can be useful to determine potential
+  problems.  These statistics include work, span, and number of steal
+  attempts.  For performance analysis, use Cilk as follows:
+
+\begin{enumerate}
+\item \emph{Compile the application} using the \texttt{cilkc} command
+  with the flag \texttt{-cilk-profile}.  If desired, also enable
+  span measurement with \texttt{-cilk-span}.  In the
+  latter case, your program may be slowed down significantly,
+  depending on the program and the availability of fast timers on your
+  computer.
+
+  \item \emph{Run the program} with your preferred level
+    of the option \texttt{--stats} (see \secref{compile-run}).
+  \end{enumerate}
+\end{description}
+
+\newcommand{\p}{\phantom{1}}
+
+\begin{figure}[t]
+\begin{center}
+  \leavevmode
+{\footnotesize
+\begin{tabular}{l|rrlrlr|rll} % Solaris-Threads                                        Timing off
+ & \multicolumn{6}{c|}{with span} 
+ & \multicolumn{3}{c}{w/o span}\\
+
+
+\textit{Program}     &$T_1$&{\it Work}&$T_\infty$&$\overline{P}$&$T_8$&$T_1/T_8$   &$T^\prime_1$&$T_1/T^\prime_1$&$T^\prime_8$\\
+\hline
+\texttt{blockedmul}     &     41.7 &  40.8 & 0.00114  & 35789    & \p 5.32  & 7.8        &  38.6 & 1.08   & \p 4.96  \\
+\texttt{bucket}         &      6.4 &   6.1 & 0.0318   & 192      & \p 1.02  & 6.3        &   6.2 & 1.036  & \p 1.02  \\
+\texttt{cholesky}       &     25.1 &  22.5 & 0.0709   & 317      & \p 3.68  & 6.8        &  14.9 & 1.68   & \p 2.32  \\
+\texttt{cilksort}       &      5.9 &   5.6 & 0.00503  & 1105     & \p 0.87  & 6.7        &   5.7 & 1.023  & \p 0.862 \\
+\texttt{fft}            &     13.0 &  12.5 & 0.00561  & 2228     & \p 1.92  & 6.8        &  11.2 & 1.16   & \p 1.85  \\
+\texttt{fib}            &     25.0 &  19.2 & 0.000120 & 160000   & \p 3.19  & 7.8        &   2.7 & 9.26   & \p 0.344 \\
+\texttt{heat}           &     63.3 &  63.2 & 0.191    & 331      & \p 8.32  & 7.6        &  63.0 & 1.0048 & \p 8.15  \\
+\texttt{knapsack}$\dagger$ & 112.0 & 104.0 & 0.000212 & 490566   &    14.3  & 7.8        &  79.2 & 1.41   & \p 8.99  \\
+\texttt{knary}          &     53.0 &  43.0 & 2.15     & 20       &    20.2  & 2.6        &  12.7 & 4.17   & \p 9.19  \\
+\texttt{lu}             &     23.1 &  23.0 & 0.174    & 132      & \p 3.09  & 7.5        &  22.6 & 1.022  & \p 2.98  \\
+\texttt{magic}          &      6.1 &   5.5 & 0.0780   & 71       & \p 0.848 & 7.2        &   3.2 & 1.88   & \p 0.472 \\
+\texttt{notempmul}      &     40.4 &  39.8 & 0.0142   & 2803     & \p 4.96  & 8.0        &  37.5 & 1.077  & \p 4.71  \\
+\texttt{plu}            &    196.1 & 194.1 & 1.753    & 112      &   30.8   & 6.4        & 188.7 & 1.04   &   30.7   \\
+\texttt{queens}$\dagger$ &   216.0 & 215.0 & 0.00156  & 137821   &   19.4   & 11.0       & 199.0 & 1.085  &   17.7   \\
+\texttt{spacemul}       &     39.3 &  38.9 & 0.000747 & 52075    & \p 4.91  & 8.0        &  37.1 & 1.059  & \p 4.73  \\
+\texttt{strassen}       &      4.2 &   4.1 & 0.154    & 27       & \p 0.767 & 5.5        &   4.2 & 1.0096 & \p 0.773 \\
+\texttt{rectmul}        &      5.0 &   5.0 & 0.000578 & 8599     & \p 0.638 & 7.8        &   4.6 & 1.082  & \p 0.606 \\
+\texttt{barnes-hut}     &    112.0 & 112.0 & 0.629    & 181      &   14.8   & 7.6        & 108.6 & 1.03   &   14.6   \\
+\end{tabular}
+}
+
+\end{center}
+\caption{\small The performance of example Cilk programs.  Time is
+  measured in seconds.  Measurements are only for the core algorithms.
+  Programs labeled by a dagger ($\dagger$) are nondeterministic, and
+  thus, the running time on one processor is not the same as the work
+  performed by the computation.}
+\label{fig:speedup}
+\end{figure}
+
+\figref{speedup} shows speedup measurements that were taken of the
+example programs distributed with Cilk-5.2.  Do not expect these
+timings to be exactly reproducible in {\sysnameversion}.  We measured
+execution time on one processor~$T_1$, execution time on eight
+processors~$T_8$, work, span~$T_\infty$, and
+parallelism~$\overline{P}=T_1/T_\infty$. To determine the overhead of
+the span measurements, we repeated the experiment without
+span mesurements. The execution times and the overhead due to
+span measurements are reported in columns $T_1'$, $T_8'$ and
+$T_1/T_1'$.
+
+The machine used for the test runs was an otherwise idle Sun
+Enterprise 5000 SMP, with 8 167-megahertz UltraSPARC processors, 512
+megabytes of main memory, 512 kilobytes of L2 cache, 16~kilobytes of
+instruction L1 cache, and 16~kilobytes of data L1 cache, using two
+versions of Cilk-5 both compiled with \texttt{gcc} 2.8.1 and
+optimization level~\texttt{-O3}.  
+
+The speedup column $T_1/T_8$ gives the time of the $8$-processor run
+of the parallel program compared to that of the $1$-processor run (or
+work, in the case of the nondeterministic programs) of the same
+parallel program.
+
+Two of the example programs, \texttt{queens} and \texttt{knapsack},
+which are marked by a dagger ($\dagger$) in the figure, are
+nondeterministic programs.  Since the work of these programs depends
+on how they are scheduled, a superlinear speedup can occur.
+%For these programs, the figures in the column
+%labeled $T_1$ (and the other dependent figures) give the work in the
+%computation as measured by adding up the individual execution times of
+%each of the threads, rather than as measured by a one-processor run,
+%as would otherwise be implied.  
+For these programs, the running time on one processor is not the same
+as the work performed by the computation. For the other
+(deterministic) programs, the measures of $T_1$ and work should be the
+same.  In practice, differences occur, which are caused by a lack of
+timing accuracy.  Because it reports work and span measurements, Cilk
+allows meaningful speedup measurements of programs whose work depends
+on the actual runtime schedule. Conventionally, speedup is calculated
+as the one-processor execution time divided by the parallel execution
+time.  This methodology, while correct for deterministic programs, can
+lead to misleading results for nondeterministic programs, since two
+runs of the same program can actually be different computations.
+Cilk's instrumentation can compute the work on any number of
+processors by adding up the execution times of individual threads,
+thereby allowing speedup to be calculated properly for
+nondeterministic programs.
+
+As can be seen from the figure, all programs exhibit good speedup.
+Even the complicated and irregular \texttt{Barnes-Hut} code achieves a
+speedup of 7.6 on 8 processors~\cite{Randall98}.
+
+The right portion of \figref{speedup} compares execution times where
+the span measurement is disabled with those where the span measurement
+is enabled. The performance gain from disabling the span measurement
+can be significant. On other architectures performance measurements
+with the span measurement enabled may be completely meaningless.
+Consequently, enabling the span measurements is only sensible for
+performance analysis purposes.
+
+
+% LocalWords:  subprocedures subprocedure gauge Irix nondeterminator strived
+% LocalWords:  subsearch subsearches dags dag UltraSPARC superlinear

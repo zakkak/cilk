@@ -1,0 +1,52 @@
+The Cilk project is led by Prof. Charles E. Leiserson of the MIT
+Laboratory for Computer Science and is supported in part by NSF Grant
+E1A-9975036.  Previous support was provided in part by DARPA Grant
+F30602-97-1-0270.
+
+The current maintainer of Cilk is Bradley C. Kuszmaul
+<bradley@mit.edu>, who is responsible for the Cilk-5.4 release.
+
+Cilk-5.4 is the product of the effort of many people over many years.
+The following people contributed code, example programs, and/or
+documentation to the Cilk-5.4 system:
+
+Eitan Ben Amos
+Robert D. Blumofe
+Guang-Ien Cheng
+Don Dailey
+Mingdong Feng
+Matteo Frigo
+Bradley C. Kuszmaul
+Charles E. Leiserson
+Phil Lisiecki
+Alberto Medina
+Robert Miller
+Ofra Pavlovitz
+Harald Prokop
+Keith H. Randall
+Bin Song
+Andy Stark
+Volker Strumpen
+
+The cilk2c translator is derived from the c2c program written by
+
+Robert Miller
+
+In turn, c2c uses the ANSI C grammar and lexer written by
+
+James A. Roskind
+
+and modified by
+
+Eric A. Brewer
+Michael D. Noakes
+
+These people have worked on previous versions of Cilk:
+
+Michael Halbherr
+Christopher F. Joerg
+Howard Lu
+Aske Plaat
+Richard Tauriello
+Daricha Techopitayakul
+Yuli Zhou

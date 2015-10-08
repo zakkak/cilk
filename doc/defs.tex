@@ -1,0 +1,63 @@
+% -*-latex-*-
+
+\newcommand{\doclearpage}{\thispagestyle{empty}\phantom{.}\newpage}
+
+% Macros identify the system.
+\newcommand{\cilktm}{Cilk$^{\mbox{\scriptsize TM}}$}
+\newcommand{\sysname}{Cilk}
+\newcommand{\sysnameversion}{Cilk \VERSION}
+\newcommand{\sysversion}{\VERSION}
+
+% Syntax environment.
+\newenvironment{syntax}{\par\begingroup\vspace*{1ex}    
+\noindent\hspace{2em}\begin{tabular}{lll}}{\end{tabular}
+\par\vspace{1ex}\endgroup}
+
+% Code environment.
+%\newenvironment{code}{\tt\begin{tabbing}
+% mmmmm\=mmm\=mmm\=mmm\=mmm\=\kill}{\end{tabbing}\rm\normalsize}
+
+% Cilk keywords
+\newcommand{\cilkkw}[1]{{\tt #1}} % and NOT \texttt. italic tt sucks
+
+% Indexing
+\newcommand{\indexcat}[3]{{\index{#2 #1#3}\index{#1!#2#3}}}
+\newcommand{\indexcats}[3]{{\index{#2 #1#3}\index{#1s!#2#3}}}
+\newcommand{\indexsub}[3]{{\index{#2#3}\index{#1!#2#3}}}
+\newcommand{\indexsubt}[4]{{\index{#3#4}\index{#1!#3#4}\index{#2!#3#4}}}
+\newcommand{\indexsymmet}[3]{{\index{#2!#1#3}\index{#1!#2#3}}}
+\newcommand{\indexhf}[2]{{\indexcats{header file}{#1}{#2}}}
+\newcommand{\indexkw}[2]{{\index{#1 keyword@\texttt{#1} keyword#2}\index{keywords!#1@\texttt{#1}#2}}}
+%\newcommand{\indexfn}[2]{{\indexcats{function}{#1@\texttt{#1}}{#2}}}
+\newcommand{\indexopt}[2]{{\index{#1 option#2}}}
+\newcommand{\indexfn}[2]{{\index{#1 function#2}}}
+\newcommand{\indexvar}[2]{{\index{#1 variable#2}}}
+\newcommand{\indextype}[2]{{\index{#1 type#2}}}
+\newcommand{\indexmac}[2]{{\index{#1 macro#2}}}
+\newcommand{\indexseg}[2]{{\index{#1 segment#2}}}
+\newcommand{\indexsubfn}[3]{{\index{#2 function#3}\index{#1!#2#3}}}
+\newcommand{\indexsubtype}[3]{{\index{#2 type#3}\index{#1!#2#3}}}
+\newcommand{\indexsymmetfn}[3]{{\index{#2 function!#1#3}\index{#1!#2#3}}}
+\newcommand{\indexcatkw}[3]{{\index{#2 keyword@\texttt{#2} keyword!#1#3}\index{keywords!#2@\texttt{#2}#3}\index{#1 #2@#1 \texttt{#2}#3}}}
+\newcommand{\indexalloc}[1]{{\index{storage allocation#1}\index{memory allocation#1}\index{shared memory!allocation#1}}}
+\newcommand{\indextiming}[2]{{\index{scheduling!#1#2}\index{scheduling!timing#2}\index{scheduling!statistics#2}\index{timing!#1#2}\index{statistics!#1#2}\index{#1#2}}}
+\newcommand{\indextimingnest}[2]{{\index{scheduling!#1#2}\index{timing!#1#2}\index{statistics!#1#2}\index{#1#2}}}
+\newcommand{\indextim}[1]{{\index{scheduling!timing#1}\index{scheduling!statistics#1}\index{timing#1}\index{statistics#1}}}
+\newcommand{\indexrace}[1]{{\index{race#1}\index{data race#1}\index{Nondeterminator!data race#1}\index{debugging!data race#1}}}
+\newcommand{\seealso}[2]{{{\it see also\/} #1}}
+
+
+\ifnum\pdftexversion>13
+  \def\pdfimage#1#{\grabpdfimage{#1}}
+  \def\grabpdfimage#1#2{%
+    \pdfximage#1{#2}\pdfrefximage\pdflastximage
+  }
+\fi
+
+\newcommand{\image}[2]{
+  \ifx\pdfoutput\undefined
+  \mbox{\epsfig{file=#1.eps,height=#2}}%
+  \else
+  \mbox{{\pdfimage height #2 {#1.pdf}}}%
+  \fi}
+\ifx\pdfoutput\undefined\else\pdfcompresslevel=9\fi

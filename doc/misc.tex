@@ -1,0 +1,268 @@
+
+\chapter*{\vspace*{-1cm}
+Release Notes}\index{release notes|(}
+
+\vspace*{-.3cm}
+
+\section*{Cilk-5.4.6}
+\begin{closeitemize}
+\item Fixed incorrect references in the printed version of the manual.
+\end{closeitemize}
+
+\section*{Cilk-5.4.5}
+\begin{closeitemize}
+\item Fixed nasty int/pointer conversion that was breaking 64-bit
+  machines.
+\item Fixed bitrot in the critical path instrumentation.
+\item Cilk now accepts anonymous unions, a gcc extension to~C.
+\item Fixed nasty bug in the Cilk dataflow analysis that was causing
+  incorrect output in certain cases.
+\end{closeitemize}
+
+\section*{Cilk-5.4.4}
+Internal release.
+
+\section*{Cilk-5.4.3}
+\begin{closeitemize}
+\item Matteo Frigo provided improved powerpc assembly code. (Bug 183).
+\item C. Scott Ananian provided improved autoconf/automake incantations.  (Bug 185 and Bug 187)
+\end{closeitemize}
+
+\section*{Cilk-5.4.2}
+
+\begin{closeitemize}
+\item Release 5.4.2.2 fixed an installation problem, in which some header files were not included.
+\item The Cilk compiler (which compiles Cilk to C) no longer
+introduces gcc-specific constructions into the output.  This means
+that you can use the native C compiler.  For example:
+\begin{verbatim}
+CC=/usr/bin/cc ./configure
+make
+\end{verbatim}
+This has been tested with the MIPSpro C compiler.  We found the
+following incantation reduces the number of spurious warnings for the
+MIPSpro compiler:
+\begin{verbatim}
+CC=/usr/bin/cc CFLAGS="-woff 1548,1552,1209,1185,1116" ./configure 
+make
+\end{verbatim}
+
+We believe MIPSpro compiler produces dramatically faster code than
+some earlier versions of gcc, but that newer versions of gcc there is
+very little performance difference.  We are interested in hearing how
+your performance works.
+
+We cannot use the Solaris C compiler yet, but it is likely to be a
+small amount of work.
+
+When using the native compiler you don't need to have gcc installed at
+all.
+
+\item If you have the \texttt{perfctr} Linux kernel patch installed,
+you can use the high resolution \texttt{perfctr} timing tool to obtain
+very accurate critical path and work information.  Install the patched
+kernel (some precompiled kernels are available from the Cilk download
+web page) and then install cilk with
+\begin{verbatim}
+./configure --with-perfctr
+make
+\end{verbatim}
+
+At this point in time, perfctr requires gcc (because it uses inline
+assembly.)  We have tested perfctr on a Pentium 4 running a patched
+Fedora Core 2 kernel.
+
+\item Many bug fixes.
+\item Tested on redhat 7.3 (x86), fedora core 2 (x86), SUSE sles 8-31
+(x86-64), Irix 6.5 (SGI Origin 2000), macos 10.3.5.
+
+Previously tested (for 5.4.1) on Solaris (SPARC), Itanium running
+Linux, redhat 8, and redhat 9, so it probably still works.
+\item We call this release Cilk-5.4.2 (which corresponds roughly to
+svn revision 1624), even though there was no officially released
+version 5.4.1, partly because we released beta copies of 5.4.1.  In
+the future, we plan to make releases more frequently.
+\end{closeitemize}
+
+\section*{Cilk-5.4.1}
+
+\begin{closeitemize}
+\item Switched from cvs to subversion version control.
+\item The specification for \texttt{inlets} has been clarified: You
+may not mix explicit and implicit inlets.  This results in
+simplification of the Cilk compiler.
+\item Cilk does not work with gcc 3.0.4 (due to a bug in gcc, which
+segfaults.)  As a result you may have trouble on SGI Irix for versions
+before 6.5.18 because the SGI freeware package for gcc 3.2.1 does not
+work with Irix 6.5.17f or before.  There are two workarounds:
+\begin{enumerate}
+\item Install gcc 3.2.2 by hand, and use it.
+\item Upgrade to Irix 6.5.18 or later, and upgrade gcc.  We haven't
+tested this second workaround.
+\end{enumerate}
+
+\item Added a new command-line argument \texttt{--pthread-stacksize}
+to the runtime system.  See \secref{compile-run} for more details.
+
+\item Added new filetype \texttt{.cilkh}, and renamed
+\texttt{cilk-lib.h} to \texttt{cilk-lib.cilkh}.  Either use
+\texttt{.cilkh}; or, in a \texttt{.h} file, use
+\verb/#pragma lang +Cilk/.  See \secref{compile-run} for more details.
+
+\item The compiler is now licensed under the GPL, and the runtime is
+under the LGPL.  See the files named \texttt{COPYING*} in the
+distribution for more information.
+
+\item Support for the AMD Opteron (x86-64) (which as much faster
+memory barriers and atomic swaps than the Pentium IV.  Hooray!)
+
+\item rpms now work.  You can do, e.g.,
+\begin{verbatim}
+ rpm -ta cilk-current-Rev530.tar.bz2
+\end{verbatim}
+to build an rpm file.
+
+\item We have a new compiler driver, called {\tt cilkc}.  The new
+driver is mostly compatible with the old gcc-based driver, but not
+bug-for-bug compatible.  There are some differences.  For example, instead of doing
+\begin{verbatim}
+  -Wp,-MD,.deps/nfib.pp
+\end{verbatim}
+You need to do \verb+-M+, and you cannot continue the compilation in
+that case.  You need to compile the file separately.
+
+Also \verb+-E+ does not send its output to \texttt{stdout}.  It
+instead sends it to a file named \texttt{$X$.cilki} where the input
+filename was \texttt{$X$.cilk}.
+
+One of the main reasons for changing the driver, is that the old
+driver didn't wor with all versions of \texttt{gcc}.  The old driver
+was also buggy.
+
+\item We now support many different versions of \texttt{gcc}, and we
+believe that we should be able to support all the versions.  We have tested gcc 3.2.2 on SGI and gcc 2.96 and gcc 3.2.1 on redhat x86.
+
+\item You no longer need to include \texttt{cilk.h} in ordinary cilk files.
+
+\item Library mode works again, thanks to Ofra Pavlovitz and Sivan
+Toledo.
+
+\item You should include \texttt{<cilk-lib.cilkh>} instead of
+ \texttt{<cilk-lib.h>}, altough the latter still works for now, it
+ will stop working someday.
+
+\item The \texttt{-nd} argument to cilk2c is mostly working, but the
+nondeterminator still is not working in this version.
+
+\item The \texttt{cilk2c} regression test are working again.
+
+\item Many more header and C files are now accepted and properly
+handled by the Cilk compiler, including various pragmas, funny
+keywords, asm statements, gcc constructors, array initializers, and
+type attributes.  Even \texttt{stdarg.h} now works. Many examples came
+from SGI and Linux.
+
+\item Use \texttt{pthread\_setconcurrency} to make SGI schedule the
+worker threads promptly.
+
+\item Fixed various and sundry bugs in \texttt{cilk2c}.
+
+
+\end{closeitemize}
+
+\section*{Cilk-5.3.2}
+\begin{closeitemize}
+\item Support for MacOS~X.
+
+\item Fixed memory leak in runtime system.
+
+\item \texttt{cilk2c}: accept C9X flexible arrays.
+\end{closeitemize}
+
+\section*{Cilk-5.3.1}
+
+\begin{closeitemize}
+\item Patched the use the unofficial gcc-2.96 that comes with
+  redhat-7.0.
+  
+\item \texttt{cilk2c}: stricter typechecking for inlet calls.  Do not
+  apply usual call conversions.
+
+\item Added support for \texttt{libhoard}.
+
+\item \texttt{cilk2c}: fixed bug regarding function redeclarations.
+
+\end{closeitemize}
+
+\section*{Cilk-5.3}
+
+\begin{closeitemize}
+  
+\item Cilk is now released under the GNU General Public License.
+  
+\item The ``cilk'' command now automates all stages of compilation and
+  linking.  Use \texttt{cilk -O2 hello.cilk -o hello} to compile a
+  simple program.
+  
+\item Improved Linux support.  \texttt{cilk2c} can now parse all
+  Linux/glibc-2 include files.
+
+\item INCOMPATIBLE CHANGE: header file \texttt{cilk-compat.h}
+  is no longer required and it is not provided.
+
+\item Fixed many bugs in \texttt{cilk2c}.
+  
+\item Cilk now always runs on top of POSIX threads. The Cilk-5.2
+  distinction between threaded and process version has disappeared.
+  
+\item The GNU linker is no longer required.  Cilk should run on any
+  system that supports gcc, GNU make, and POSIX threads.
+
+\end{closeitemize}
+
+\index{release notes|)}
+
+\bigskip
+\bigskip
+
+\section*{Web page}
+
+The Cilk distribution, FAQ and further documentation are available at
+the Cilk web page:
+
+\begin{center}
+\large
+\texttt{http://supertech.lcs.mit.edu/cilk}
+\end{center}
+
+\bigskip
+\bigskip
+
+
+\section*{Support}
+\index{bugs!reporting}
+\index{Support}
+\index{Cilk!Support}
+
+Please send questions and comments to
+\begin{center}
+\tt cilk-support@csail.mit.edu
+\end{center}
+
+\section*{Mailing lists}
+\label{mailinglists}
+
+If you use Cilk, you may wish to be on the cilk-users mailing list.
+To join the cilk-users mailing list, look for the \texttt{cilk} project
+at \texttt{http://www.sourceforge.net}
+
+To send email directly to the cilk-users mailing list, use
+\begin{center}
+\texttt{cilk-users@lists.sourceforge.net}
+\end{center}
+
+Note: The {\tt sourceforge.net} mailing lists are likely to go away
+soon, because sourceforge is unwilling to do anything about SPAM\@.
+Currently, if you want something to make it onto the mailing lists,
+you have to get Bradley Kuszmaul to approve it.
+

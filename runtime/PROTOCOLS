@@ -1,0 +1,84 @@
+% $HeadURL: https://bradley.csail.mit.edu/svn/repos/cilk/5.4.3/runtime/PROTOCOLS $ $LastChangedBy: bradley $ $Rev: 111 $ $Date: 2002-12-27 02:57:40 -0500 (Fri, 27 Dec 2002) $
+
+% This file describes the protocols used by the runtime system,
+% and how the various locks interact.  I find writing this 
+% document convenient for myself, and it may help other people.
+
+1) MEANING OF THE CLOSURE STATE
+
+A closure is in one of four states
+
+- CLOSURE_RUNNING:  there is currently a processor working
+     on the closure *OR* on one of the child frames.  The closure
+     is at the bottom of that processor's ready deque.
+
+- CLOSURE_SUSPENDED: the closure is in no queue and nobody is
+     working on it.  Can be provably-good stolen.
+
+- CLOSURE_READY: suspended closure whose join counter is zero.
+     My idea is that the scheduler should be able to work
+     with more than one closure in the ready queue.  This
+     is not used yet, but may simplify alternative scheduler
+     policies (steal in the middle, etc) as well as abort.
+
+- CLOSURE_RETURNING: this is an intermediate state that causes
+     only headache in protocols.  Essentially, a RETURNING closure
+     is dead for all purposes.  It is only kept around because it
+     carries a return value to be sent to the parent.  In particular,
+     one cannot to try to change the RETURNING state into something
+     else.
+
+2) LOCKS AND PRECEDENCES.
+
+The main locks in the system are ReadyDeque locks, and Closure locks.
+Rules for acquiring locks:
+
+A) a ReadyDeque lock must be acquired before any Closure lock.
+
+B) a processor can grab only one ReadyDeque lock at the time.
+
+C) Closure locks must be acquired downwards in the closure tree.
+
+In general, locks can be released in an arbitrary order, with the
+following IMPORTANT EXCEPTION:
+
+D) When obtaining a pointer to a closure K from a ReadyDeque or from
+   the parent, you cannot release the source of the pointer until
+   you have locked K and ensured that K is not returning (in that order).
+
+The reason for rule D) is that the return protocol does not lock a
+closure that is returning.  However, the protocol is careful in
+removing all pointers to a closure before removing it, by locking the
+places that hold the pointer.  RETURNING closures should be treated as
+non-existing; they are not really part of a ready queue or of the
+closure tree.  The closure may disappear from the time you get the
+pointer to the time you look at the closure.  Consequently, you must
+check whether a closure is returning in an atomic fashion.
+
+Rule D is automatic if you acquire locks in a stack-like fashion:
+
+lock A
+  lock B
+    ....
+  unlock B
+unlock A
+
+Unfortunately, Keith insists that things should be different in the
+steal protocol, where he wants to
+
+lock queue
+lock closure
+   if (stealable closure)
+      do something
+      unlock queue as soon as possible
+      do something else
+      unlock closure
+    else
+      unlock closure
+      unlock queue
+
+(the reason is that he wants to release the victim as soon as
+possible, for performance reasons).
+
+
+
