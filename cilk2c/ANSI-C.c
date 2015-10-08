@@ -284,33 +284,33 @@
 
 
     /* Copyright (C) 1989,1990 James A. Roskind, All rights reserved.
-    This grammar was developed  and  written  by  James  A.  Roskind. 
-    Copying  of  this  grammar  description, as a whole, is permitted 
-    providing this notice is intact and applicable  in  all  complete 
-    copies.   Translations as a whole to other parser generator input 
-    languages  (or  grammar  description  languages)   is   permitted 
-    provided  that  this  notice is intact and applicable in all such 
-    copies,  along  with  a  disclaimer  that  the  contents  are   a 
-    translation.   The reproduction of derived text, such as modified 
-    versions of this grammar, or the output of parser generators,  is 
-    permitted,  provided  the  resulting  work includes the copyright 
-    notice "Portions Copyright (c)  1989,  1990  James  A.  Roskind". 
-    Derived products, such as compilers, translators, browsers, etc., 
-    that  use  this  grammar,  must also provide the notice "Portions 
-    Copyright  (c)  1989,  1990  James  A.  Roskind"  in   a   manner 
-    appropriate  to  the  utility,  and in keeping with copyright law 
-    (e.g.: EITHER displayed when first invoked/executed; OR displayed 
-    continuously on display terminal; OR via placement in the  object 
-    code  in  form  readable in a printout, with or near the title of 
-    the work, or at the end of the file).  No royalties, licenses  or 
-    commissions  of  any  kind are required to copy this grammar, its 
-    translations, or derivative products, when the copies are made in 
-    compliance with this notice. Persons or corporations that do make 
-    copies in compliance with this notice may charge  whatever  price 
-    is  agreeable  to  a  buyer, for such copies or derivative works. 
-    THIS GRAMMAR IS PROVIDED ``AS IS'' AND  WITHOUT  ANY  EXPRESS  OR 
-    IMPLIED  WARRANTIES,  INCLUDING,  WITHOUT LIMITATION, THE IMPLIED 
-    WARRANTIES  OF  MERCHANTABILITY  AND  FITNESS  FOR  A  PARTICULAR 
+    This grammar was developed  and  written  by  James  A.  Roskind.
+    Copying  of  this  grammar  description, as a whole, is permitted
+    providing this notice is intact and applicable  in  all  complete
+    copies.   Translations as a whole to other parser generator input
+    languages  (or  grammar  description  languages)   is   permitted
+    provided  that  this  notice is intact and applicable in all such
+    copies,  along  with  a  disclaimer  that  the  contents  are   a
+    translation.   The reproduction of derived text, such as modified
+    versions of this grammar, or the output of parser generators,  is
+    permitted,  provided  the  resulting  work includes the copyright
+    notice "Portions Copyright (c)  1989,  1990  James  A.  Roskind".
+    Derived products, such as compilers, translators, browsers, etc.,
+    that  use  this  grammar,  must also provide the notice "Portions
+    Copyright  (c)  1989,  1990  James  A.  Roskind"  in   a   manner
+    appropriate  to  the  utility,  and in keeping with copyright law
+    (e.g.: EITHER displayed when first invoked/executed; OR displayed
+    continuously on display terminal; OR via placement in the  object
+    code  in  form  readable in a printout, with or near the title of
+    the work, or at the end of the file).  No royalties, licenses  or
+    commissions  of  any  kind are required to copy this grammar, its
+    translations, or derivative products, when the copies are made in
+    compliance with this notice. Persons or corporations that do make
+    copies in compliance with this notice may charge  whatever  price
+    is  agreeable  to  a  buyer, for such copies or derivative works.
+    THIS GRAMMAR IS PROVIDED ``AS IS'' AND  WITHOUT  ANY  EXPRESS  OR
+    IMPLIED  WARRANTIES,  INCLUDING,  WITHOUT LIMITATION, THE IMPLIED
+    WARRANTIES  OF  MERCHANTABILITY  AND  FITNESS  FOR  A  PARTICULAR
     PURPOSE.
 
     James A. Roskind
@@ -329,7 +329,7 @@
  * Copyright (c) 2000 Matteo Frigo
  * Copyright (c) 2002 Bradley C. Kuszmaul
  * Copyright (c) 2003 Jim Sukha
- * 
+ *
  * The changes to this gramamr since James Roskind's original are licensed under the GNU GPL.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -356,12 +356,12 @@ This file is a companion file to a C++ grammar description file.
  *
  *  Adapted from Clean ANSI C Parser
  *  Eric A. Brewer, Michael D. Noakes
- *  
+ *
  *************************************************************************/
 
 /* FILENAME: C.Y */
 
-/*  This  is a grammar file for the dpANSI C language.  This file was 
+/*  This  is a grammar file for the dpANSI C language.  This file was
 last modified by J. Roskind on 3/7/90. Version 1.00 */
 
 
@@ -369,15 +369,15 @@ last modified by J. Roskind on 3/7/90. Version 1.00 */
 
 /* ACKNOWLEDGMENT:
 
-Without the effort expended by the ANSI C standardizing committee,  I 
-would  have been lost.  Although the ANSI C standard does not include 
-a fully disambiguated syntax description, the committee has at  least 
+Without the effort expended by the ANSI C standardizing committee,  I
+would  have been lost.  Although the ANSI C standard does not include
+a fully disambiguated syntax description, the committee has at  least
 provided most of the disambiguating rules in narratives.
 
-Several  reviewers  have also recently critiqued this grammar, and/or 
-assisted in discussions during it's preparation.  These reviewers are 
-certainly not responsible for the errors I have committed  here,  but 
-they  are responsible for allowing me to provide fewer errors.  These 
+Several  reviewers  have also recently critiqued this grammar, and/or
+assisted in discussions during it's preparation.  These reviewers are
+certainly not responsible for the errors I have committed  here,  but
+they  are responsible for allowing me to provide fewer errors.  These
 colleagues include: Bruce Blodgett, and Mark Langley. */
 
 /* Added by Eric A. Brewer */
@@ -385,7 +385,7 @@ colleagues include: Bruce Blodgett, and Mark Langley. */
 #define _Y_TAB_H_  /* prevents redundant inclusion of y.tab.h */
 #include "ast.h"
 #include "stringParse.h"
- 
+
 FILE_IDENTITY(ident_ansi_c_y,
 	      "$HeadURL: https://bradley.csail.mit.edu/svn/repos/cilk/5.4.3/cilk2c/ANSI-C.y $ $LastChangedBy: bradley $ $Rev: 2836 $ $Date: 2006-04-12 08:36:07 -0400 (Wed, 12 Apr 2006) $");
 
@@ -419,10 +419,8 @@ PRIVATE void yyerror(const char *msg)
    return parseInputType;
  }
 
- GLOBAL inline Bool AcceptWildcards() {
-   return (parseInputType != EntireProgram);
- }
- 
+ #define AcceptWildcards() (parseInputType != EntireProgram)
+
  GLOBAL Bool OmitLookups() {
    return (OmitLookupsFlag && (parseInputType != EntireProgram));
    /*  return FALSE; */
@@ -459,7 +457,7 @@ typedef union YYSTYPE
   /* tq: type qualifiers */
     struct {
         TypeQual   tq;
-	Coord      coord;   /* coordinates where type quals began */ 
+	Coord      coord;   /* coordinates where type quals began */
     } tq;
 
   /* tok: token coordinates */
@@ -3341,7 +3339,7 @@ yyparse ()
 #endif
 #endif
 {
-  
+
   int yystate;
   int yyn;
   int yyresult;
@@ -3620,7 +3618,7 @@ yyreduce:
 
   case 10:
 #line 420 "ANSI-C.y"
-    { (yyvsp[(2) - (3)].n)->coord = (yyvsp[(1) - (3)].tok);   /* We used to set the coord only for comma expressions.  We really need to do it everywhere. */ 
+    { (yyvsp[(2) - (3)].n)->coord = (yyvsp[(1) - (3)].tok);   /* We used to set the coord only for comma expressions.  We really need to do it everywhere. */
                                   (yyvsp[(2) - (3)].n)->parenthesized = TRUE;
                                   (yyval.n) = (yyvsp[(2) - (3)].n); }
     break;
@@ -3829,7 +3827,7 @@ yyreduce:
 #line 533 "ANSI-C.y"
     { if (ANSIOnly)
  	                                                   SyntaxError("constructors not allowed with -ansi switch");
-                                                         (yyval.n) = MakeConstructorCoord((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n), (yyvsp[(1) - (4)].tok)); 
+                                                         (yyval.n) = MakeConstructorCoord((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n), (yyvsp[(1) - (4)].tok));
                                                        }
     break;
 
@@ -3910,7 +3908,7 @@ yyreduce:
 
   case 72:
 #line 595 "ANSI-C.y"
-    { 
+    {
               WarnAboutPrecedence('^', (yyvsp[(1) - (3)].n));
               WarnAboutPrecedence('^', (yyvsp[(3) - (3)].n));
 	      (yyval.n) = MakeBinopCoord('^', (yyvsp[(1) - (3)].n), (yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].tok)); }
@@ -4013,8 +4011,8 @@ yyreduce:
 
   case 96:
 #line 660 "ANSI-C.y"
-    {  
-              if ((yyvsp[(1) - (3)].n)->typ == Comma) 
+    {
+              if ((yyvsp[(1) - (3)].n)->typ == Comma)
                 {
 		  AppendItem((yyvsp[(1) - (3)].n)->u.comma.exprs, (yyvsp[(3) - (3)].n));
 		  (yyval.n) = (yyvsp[(1) - (3)].n);
@@ -4076,7 +4074,7 @@ yyreduce:
 
   case 106:
 #line 741 "ANSI-C.y"
-    {    
+    {
 		 SetDeclAttribs((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].tq).tq);
 		 (yyvsp[(3) - (3)].n) = DefineProc(FALSE, SetDeclType((yyvsp[(3) - (3)].n), (yyvsp[(1) - (3)].n), Redecl));
 	    }
@@ -4125,7 +4123,7 @@ yyreduce:
 
   case 112:
 #line 777 "ANSI-C.y"
-    { 
+    {
 	      SetDeclType((yyvsp[(2) - (2)].n), (yyvsp[(1) - (2)].n), Redecl);
 	    }
     break;
@@ -4142,14 +4140,14 @@ yyreduce:
 
   case 115:
 #line 783 "ANSI-C.y"
-    { 
-              (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(2) - (8)].n), (yyvsp[(8) - (8)].n))); 
+    {
+              (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(2) - (8)].n), (yyvsp[(8) - (8)].n)));
             }
     break;
 
   case 116:
 #line 789 "ANSI-C.y"
-    { 
+    {
 	      SetDeclAttribs((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].tq).tq);
 	      SetDeclType((yyvsp[(3) - (3)].n), (yyvsp[(1) - (3)].n), Redecl);
 	    }
@@ -4167,14 +4165,14 @@ yyreduce:
 
   case 119:
 #line 796 "ANSI-C.y"
-    { 
-              (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(3) - (9)].n), (yyvsp[(9) - (9)].n))); 
+    {
+              (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(3) - (9)].n), (yyvsp[(9) - (9)].n)));
             }
     break;
 
   case 120:
 #line 801 "ANSI-C.y"
-    { 
+    {
               SetDeclType((yyvsp[(2) - (2)].n), (yyvsp[(1) - (2)].n), Redecl);
             }
     break;
@@ -4191,14 +4189,14 @@ yyreduce:
 
   case 123:
 #line 807 "ANSI-C.y"
-    { 
-              (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(2) - (8)].n), (yyvsp[(8) - (8)].n))); 
+    {
+              (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(2) - (8)].n), (yyvsp[(8) - (8)].n)));
 	    }
     break;
 
   case 124:
 #line 813 "ANSI-C.y"
-    { 
+    {
 		 SetDeclAttribs((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].tq).tq);
 		 SetDeclType((yyvsp[(3) - (3)].n), (yyvsp[(1) - (3)].n), Redecl);
             }
@@ -4216,14 +4214,14 @@ yyreduce:
 
   case 127:
 #line 820 "ANSI-C.y"
-    { 
-		 (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(3) - (9)].n), (yyvsp[(9) - (9)].n))); 
+    {
+		 (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(3) - (9)].n), (yyvsp[(9) - (9)].n)));
 	    }
     break;
 
   case 128:
 #line 824 "ANSI-C.y"
-    { 
+    {
 	      (yyval.L) = AppendDecl((yyvsp[(1) - (3)].L), (yyvsp[(3) - (3)].n), Redecl);
 	    }
     break;
@@ -4240,10 +4238,10 @@ yyreduce:
 
   case 131:
 #line 830 "ANSI-C.y"
-    { 
-              SetDeclInit((yyvsp[(3) - (9)].n), (yyvsp[(9) - (9)].n)); 
+    {
+              SetDeclInit((yyvsp[(3) - (9)].n), (yyvsp[(9) - (9)].n));
 	      if (yydebug) {
-		  //printf("%s:%d ", __FILE__, __LINE__); DPL($7); 
+		  //printf("%s:%d ", __FILE__, __LINE__); DPL($7);
 		  printf("%s:%d ", __FILE__, __LINE__); DPN((yyvsp[(3) - (9)].n));
 	      }
             }
@@ -4251,35 +4249,35 @@ yyreduce:
 
   case 132:
 #line 841 "ANSI-C.y"
-    { 
-              SyntaxError("declaration without a variable"); 
+    {
+              SyntaxError("declaration without a variable");
             }
     break;
 
   case 133:
 #line 847 "ANSI-C.y"
-    { 
-              (yyval.L) = NULL; /* empty list */ 
+    {
+              (yyval.L) = NULL; /* empty list */
             }
     break;
 
   case 134:
 #line 852 "ANSI-C.y"
-    { 
-              SyntaxError("declaration without a variable"); 
+    {
+              SyntaxError("declaration without a variable");
             }
     break;
 
   case 135:
 #line 858 "ANSI-C.y"
-    { 
-              (yyval.L) = NULL; /* empty list */ 
+    {
+              (yyval.L) = NULL; /* empty list */
             }
     break;
 
   case 137:
 #line 869 "ANSI-C.y"
-    { 
+    {
               SetDeclType((yyvsp[(2) - (2)].n), MakeDefaultPrimType((yyvsp[(1) - (2)].tq).tq, (yyvsp[(1) - (2)].tq).coord), NoRedecl);
             }
     break;
@@ -4293,14 +4291,14 @@ yyreduce:
 
   case 139:
 #line 876 "ANSI-C.y"
-    { 
-		(yyval.L) = MakeNewList(SetDeclInit((yyvsp[(2) - (6)].n), (yyvsp[(6) - (6)].n))); 
+    {
+		(yyval.L) = MakeNewList(SetDeclInit((yyvsp[(2) - (6)].n), (yyvsp[(6) - (6)].n)));
             }
     break;
 
   case 140:
 #line 880 "ANSI-C.y"
-    { 
+    {
               SetDeclType((yyvsp[(2) - (2)].n), MakeDefaultPrimType((yyvsp[(1) - (2)].tq).tq, (yyvsp[(1) - (2)].tq).coord), NoRedecl);
             }
     break;
@@ -4314,8 +4312,8 @@ yyreduce:
 
   case 142:
 #line 887 "ANSI-C.y"
-    { 
-              (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(2) - (6)].n), (yyvsp[(6) - (6)].n))); 
+    {
+              (yyval.L) = MakeNewList(SetDeclInit((yyvsp[(2) - (6)].n), (yyvsp[(6) - (6)].n)));
 	    }
     break;
 
@@ -4336,29 +4334,29 @@ yyreduce:
 
   case 146:
 #line 899 "ANSI-C.y"
-    { 
-              SyntaxError("declaration without a variable"); 
+    {
+              SyntaxError("declaration without a variable");
 	    }
     break;
 
   case 147:
 #line 904 "ANSI-C.y"
-    { 
-              (yyval.L) = NULL; /* empty list */ 
+    {
+              (yyval.L) = NULL; /* empty list */
 	    }
     break;
 
   case 148:
 #line 909 "ANSI-C.y"
-    { 
-              SyntaxError("declaration without a variable"); 
+    {
+              SyntaxError("declaration without a variable");
 	    }
     break;
 
   case 149:
 #line 914 "ANSI-C.y"
-    { 
-              (yyval.L) = NULL; /* empty list */ 
+    {
+              (yyval.L) = NULL; /* empty list */
             }
     break;
 
@@ -4432,7 +4430,7 @@ yyreduce:
 #line 978 "ANSI-C.y"
     {
 		 (yyval.tq).tq = MergeTypeQuals((yyvsp[(1) - (2)].tq).tq, (yyvsp[(2) - (2)].tq).tq, (yyvsp[(2) - (2)].tq).coord);
-		 (yyval.tq).coord = (yyvsp[(1) - (2)].tq).coord; 
+		 (yyval.tq).coord = (yyvsp[(1) - (2)].tq).coord;
 	    }
     break;
 
@@ -4441,7 +4439,7 @@ yyreduce:
     {
 		 (yyval.tq).tq = MergeTypeQuals((yyvsp[(1) - (4)].tq).tq, (yyvsp[(2) - (4)].tq).tq, (yyvsp[(2) - (4)].tq).coord);
 		 (yyval.tq).tq = MergeTypeQuals((yyval.tq).tq, (yyvsp[(3) - (4)].tq).tq, (yyvsp[(3) - (4)].tq).coord);
-		 (yyval.tq).coord = (yyvsp[(1) - (4)].tq).coord; 
+		 (yyval.tq).coord = (yyvsp[(1) - (4)].tq).coord;
 	    }
     break;
 
@@ -4449,7 +4447,7 @@ yyreduce:
 #line 989 "ANSI-C.y"
     {
               (yyval.tq).tq = MergeTypeQuals((yyvsp[(1) - (2)].tq).tq, (yyvsp[(2) - (2)].tq).tq, (yyvsp[(2) - (2)].tq).coord);
-              (yyval.tq).coord = (yyvsp[(1) - (2)].tq).coord; 
+              (yyval.tq).coord = (yyvsp[(1) - (2)].tq).coord;
 	    }
     break;
 
@@ -4461,7 +4459,7 @@ yyreduce:
   case 178:
 #line 1031 "ANSI-C.y"
     {
-		(yyval.n) = NodeCopy(NodeDataType(SemCheckNode((yyvsp[(3) - (4)].n))), Subtree); /* copy the node so we can remove type qualifiers without hurting the code */	      
+		(yyval.n) = NodeCopy(NodeDataType(SemCheckNode((yyvsp[(3) - (4)].n))), Subtree); /* copy the node so we can remove type qualifiers without hurting the code */
 		SetCoords((yyval.n), (yyvsp[(1) - (4)].tok), Subtree);
 		NodeUpdateTq((yyval.n), tq_remove_everything); /* Take off all the type qualifiers */
 	    }
@@ -4556,7 +4554,7 @@ yyreduce:
 
   case 203:
 #line 1125 "ANSI-C.y"
-    { (yyval.n) = SetDeclType((yyvsp[(4) - (5)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (5)].tok)), Redecl); 
+    { (yyval.n) = SetDeclType((yyvsp[(4) - (5)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (5)].tok)), Redecl);
                }
     break;
 
@@ -4568,25 +4566,25 @@ yyreduce:
 
   case 205:
 #line 1131 "ANSI-C.y"
-    { (yyval.n) = SetDeclType((yyvsp[(4) - (4)].n), MakePtrCoord(   (yyvsp[(3) - (4)].tq).tq,    NULL, (yyvsp[(1) - (4)].tok)), Redecl); 
+    { (yyval.n) = SetDeclType((yyvsp[(4) - (4)].n), MakePtrCoord(   (yyvsp[(3) - (4)].tq).tq,    NULL, (yyvsp[(1) - (4)].tok)), Redecl);
                }
     break;
 
   case 206:
 #line 1139 "ANSI-C.y"
-    { (yyval.n) = (yyvsp[(2) - (3)].n);  
+    { (yyval.n) = (yyvsp[(2) - (3)].n);
               }
     break;
 
   case 207:
 #line 1142 "ANSI-C.y"
-    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(3) - (4)].n)); 
+    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(3) - (4)].n));
                }
     break;
 
   case 208:
 #line 1145 "ANSI-C.y"
-    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n)); 
+    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n));
                }
     break;
 
@@ -4597,7 +4595,7 @@ yyreduce:
 
   case 210:
 #line 1154 "ANSI-C.y"
-    { (yyval.n) = (yyvsp[(2) - (3)].n);  
+    { (yyval.n) = (yyvsp[(2) - (3)].n);
                }
     break;
 
@@ -4613,25 +4611,25 @@ yyreduce:
 
   case 215:
 #line 1175 "ANSI-C.y"
-    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (3)].tok)), Redecl); 
+    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (3)].tok)), Redecl);
                }
     break;
 
   case 216:
 #line 1178 "ANSI-C.y"
-    { (yyval.n) = SetDeclType((yyvsp[(4) - (4)].n), MakePtrCoord((yyvsp[(3) - (4)].tq).tq, NULL, (yyvsp[(1) - (4)].tok)), Redecl); 
+    { (yyval.n) = SetDeclType((yyvsp[(4) - (4)].n), MakePtrCoord((yyvsp[(3) - (4)].tq).tq, NULL, (yyvsp[(1) - (4)].tok)), Redecl);
                }
     break;
 
   case 217:
 #line 1185 "ANSI-C.y"
-    { (yyval.n) = (yyvsp[(2) - (3)].n); 
+    { (yyval.n) = (yyvsp[(2) - (3)].n);
                }
     break;
 
   case 218:
 #line 1188 "ANSI-C.y"
-    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n)); 
+    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n));
                }
     break;
 
@@ -4647,37 +4645,37 @@ yyreduce:
 
   case 224:
 #line 1206 "ANSI-C.y"
-    { (yyval.n) = SetBaseType((yyvsp[(3) - (3)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (3)].tok))); 
+    { (yyval.n) = SetBaseType((yyvsp[(3) - (3)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (3)].tok)));
                }
     break;
 
   case 225:
 #line 1209 "ANSI-C.y"
-    { (yyval.n) = SetBaseType((yyvsp[(4) - (4)].n), MakePtrCoord((yyvsp[(3) - (4)].tq).tq, NULL, (yyvsp[(1) - (4)].tok))); 
+    { (yyval.n) = SetBaseType((yyvsp[(4) - (4)].n), MakePtrCoord((yyvsp[(3) - (4)].tq).tq, NULL, (yyvsp[(1) - (4)].tok)));
                }
     break;
 
   case 226:
 #line 1216 "ANSI-C.y"
-    { (yyval.n) = (yyvsp[(2) - (3)].n); 
+    { (yyval.n) = (yyvsp[(2) - (3)].n);
                }
     break;
 
   case 227:
 #line 1219 "ANSI-C.y"
-    { (yyval.n) = (yyvsp[(2) - (3)].n); 
+    { (yyval.n) = (yyvsp[(2) - (3)].n);
                }
     break;
 
   case 228:
 #line 1222 "ANSI-C.y"
-    { (yyval.n) = (yyvsp[(2) - (3)].n); 
+    { (yyval.n) = (yyvsp[(2) - (3)].n);
                }
     break;
 
   case 229:
 #line 1225 "ANSI-C.y"
-    { (yyval.n) = SetBaseType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n)); 
+    { (yyval.n) = SetBaseType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n));
                }
     break;
 
@@ -4700,13 +4698,13 @@ yyreduce:
 #line 1247 "ANSI-C.y"
     { //printf("%s:%d ", __FILE__, __LINE__); DPL($2);
               SetDeclAttribs((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].tq).tq);
-              (yyval.n) = ModifyDeclType((yyvsp[(3) - (3)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (3)].tok))); 
+              (yyval.n) = ModifyDeclType((yyvsp[(3) - (3)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (3)].tok)));
               }
     break;
 
   case 237:
 #line 1252 "ANSI-C.y"
-    { (yyval.n) = ModifyDeclType((yyvsp[(4) - (4)].n), MakePtrCoord(tq_union((yyvsp[(2) - (4)].tq).tq, (yyvsp[(3) - (4)].tq).tq),    NULL, (yyvsp[(1) - (4)].tok))); 
+    { (yyval.n) = ModifyDeclType((yyvsp[(4) - (4)].n), MakePtrCoord(tq_union((yyvsp[(2) - (4)].tq).tq, (yyvsp[(3) - (4)].tq).tq),    NULL, (yyvsp[(1) - (4)].tok)));
                }
     break;
 
@@ -4717,13 +4715,13 @@ yyreduce:
 
   case 239:
 #line 1261 "ANSI-C.y"
-    { (yyval.n) = (yyvsp[(2) - (3)].n); 
+    { (yyval.n) = (yyvsp[(2) - (3)].n);
                }
     break;
 
   case 240:
 #line 1264 "ANSI-C.y"
-    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n)); 
+    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n));
                }
     break;
 
@@ -4734,7 +4732,7 @@ yyreduce:
 
   case 242:
 #line 1273 "ANSI-C.y"
-    { (yyval.n) = (yyvsp[(2) - (3)].n); 
+    { (yyval.n) = (yyvsp[(2) - (3)].n);
                }
     break;
 
@@ -4750,20 +4748,20 @@ yyreduce:
 
   case 244:
 #line 1287 "ANSI-C.y"
-    { 
-              (yyval.n) = (yyvsp[(1) - (1)].n); 
+    {
+              (yyval.n) = (yyvsp[(1) - (1)].n);
             }
     break;
 
   case 245:
 #line 1291 "ANSI-C.y"
-    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (3)].tok)), SU); 
+    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), MakePtrCoord(EMPTY_TQ, NULL, (yyvsp[(1) - (3)].tok)), SU);
                }
     break;
 
   case 246:
 #line 1294 "ANSI-C.y"
-    { (yyval.n) = SetDeclType((yyvsp[(4) - (4)].n), MakePtrCoord((yyvsp[(3) - (4)].tq).tq, NULL, (yyvsp[(1) - (4)].tok)), SU); 
+    { (yyval.n) = SetDeclType((yyvsp[(4) - (4)].n), MakePtrCoord((yyvsp[(3) - (4)].tq).tq, NULL, (yyvsp[(1) - (4)].tok)), SU);
                }
     break;
 
@@ -4774,13 +4772,13 @@ yyreduce:
 
   case 248:
 #line 1303 "ANSI-C.y"
-    { (yyval.n) = (yyvsp[(2) - (3)].n); 
+    { (yyval.n) = (yyvsp[(2) - (3)].n);
                }
     break;
 
   case 249:
 #line 1306 "ANSI-C.y"
-    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n)); 
+    { (yyval.n) = ModifyDeclType((yyvsp[(2) - (4)].n), (yyvsp[(4) - (4)].n));
                }
     break;
 
@@ -4986,10 +4984,10 @@ yyreduce:
 
   case 294:
 #line 1466 "ANSI-C.y"
-    { 
+    {
               assert((yyvsp[(1) - (3)].n)->typ == Initializer);
               AppendItem((yyvsp[(1) - (3)].n)->u.initializer.exprs, (yyvsp[(3) - (3)].n));
-              (yyval.n) = (yyvsp[(1) - (3)].n); 
+              (yyval.n) = (yyvsp[(1) - (3)].n);
             }
     break;
 
@@ -5018,9 +5016,9 @@ yyreduce:
 
   case 300:
 #line 1495 "ANSI-C.y"
-    { 
+    {
 	      SyntaxErrorCoord((yyvsp[(1) - (3)].n)->coord, "formals cannot have initializers");
-              (yyval.L) = MakeNewList((yyvsp[(1) - (3)].n)); 
+              (yyval.L) = MakeNewList((yyvsp[(1) - (3)].n));
             }
     break;
 
@@ -5036,19 +5034,19 @@ yyreduce:
 
   case 303:
 #line 1508 "ANSI-C.y"
-    { (yyval.n) = SetBaseType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n)); 
+    { (yyval.n) = SetBaseType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n));
             }
     break;
 
   case 304:
 #line 1511 "ANSI-C.y"
-    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n), Formal); 
+    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n), Formal);
             }
     break;
 
   case 305:
 #line 1514 "ANSI-C.y"
-    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n), Formal); 
+    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n), Formal);
             }
     break;
 
@@ -5074,7 +5072,7 @@ yyreduce:
 
   case 310:
 #line 1525 "ANSI-C.y"
-    { (yyval.n) = SetBaseType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n)); 
+    { (yyval.n) = SetBaseType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n));
             }
     break;
 
@@ -5087,7 +5085,7 @@ yyreduce:
 
   case 312:
 #line 1532 "ANSI-C.y"
-    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n), Formal); 
+    { (yyval.n) = SetDeclType((yyvsp[(3) - (3)].n), (yyvsp[(2) - (3)].n), Formal);
             }
     break;
 
@@ -5128,28 +5126,28 @@ yyreduce:
 
   case 320:
 #line 1573 "ANSI-C.y"
-    { 
+    {
               (yyval.n) = SetSUdclNameFields((yyvsp[(1) - (4)].n), NULL, (yyvsp[(3) - (4)].L), (yyvsp[(2) - (4)].tok), (yyvsp[(4) - (4)].tok), NULL);
             }
     break;
 
   case 321:
 #line 1578 "ANSI-C.y"
-    { 
+    {
               (yyval.n) = SetSUdclNameFields((yyvsp[(1) - (5)].n), (yyvsp[(2) - (5)].n), (yyvsp[(4) - (5)].L), (yyvsp[(3) - (5)].tok), (yyvsp[(5) - (5)].tok), NULL);
 	    }
     break;
 
   case 322:
 #line 1582 "ANSI-C.y"
-    { 
+    {
               (yyval.n) = SetSUdclName((yyvsp[(1) - (2)].n), (yyvsp[(2) - (2)].n), (yyvsp[(1) - (2)].n)->coord);
 	    }
     break;
 
   case 323:
 #line 1587 "ANSI-C.y"
-    { 
+    {
               if (ANSIOnly)
                  Warning(1, "empty structure declaration");
               (yyval.n) = SetSUdclNameFields((yyvsp[(1) - (3)].n), NULL, NULL, (yyvsp[(2) - (3)].tok), (yyvsp[(3) - (3)].tok), NULL);
@@ -5158,10 +5156,10 @@ yyreduce:
 
   case 324:
 #line 1593 "ANSI-C.y"
-    { 
+    {
               if (ANSIOnly)
                  Warning(1, "empty structure declaration");
-              (yyval.n) = SetSUdclNameFields((yyvsp[(1) - (4)].n), (yyvsp[(2) - (4)].n), NULL, (yyvsp[(3) - (4)].tok), (yyvsp[(4) - (4)].tok), NULL); 
+              (yyval.n) = SetSUdclNameFields((yyvsp[(1) - (4)].n), (yyvsp[(2) - (4)].n), NULL, (yyvsp[(3) - (4)].tok), (yyvsp[(4) - (4)].tok), NULL);
 	    }
     break;
 
@@ -5177,15 +5175,15 @@ yyreduce:
 
   case 327:
 #line 1609 "ANSI-C.y"
-    { 
-              (yyval.L) = (yyvsp[(2) - (2)].L); 
-              NodeUpdateTq2(FirstItem((yyval.L)), tq_union, (yyvsp[(1) - (2)].tq).tq); 
+    {
+              (yyval.L) = (yyvsp[(2) - (2)].L);
+              NodeUpdateTq2(FirstItem((yyval.L)), tq_union, (yyvsp[(1) - (2)].tq).tq);
             }
     break;
 
   case 328:
 #line 1614 "ANSI-C.y"
-    { 
+    {
 	      NodeUpdateTq2(FirstItem((yyvsp[(3) - (3)].L)), tq_union, (yyvsp[(2) - (3)].tq).tq);
               (yyval.L) = JoinLists((yyvsp[(1) - (3)].L), (yyvsp[(3) - (3)].L));
 	    }
@@ -5198,10 +5196,10 @@ yyreduce:
 
   case 332:
 #line 1631 "ANSI-C.y"
-    { 
+    {
 	      (yyval.L) = MakeNewList(SetDeclType((yyvsp[(2) - (2)].n),
 					    MakeDefaultPrimType((yyvsp[(1) - (2)].tq).tq, (yyvsp[(1) - (2)].tq).coord),
-					    SU)); 
+					    SU));
 	    }
     break;
 
@@ -5451,7 +5449,7 @@ yyreduce:
 
   case 384:
 #line 1822 "ANSI-C.y"
-    { (yyval.L) = AppendItem(GrabPragmas((yyvsp[(1) - (2)].L)), 
+    { (yyval.L) = AppendItem(GrabPragmas((yyvsp[(1) - (2)].L)),
                                                         (yyvsp[(2) - (2)].n)); }
     break;
 
@@ -5664,7 +5662,7 @@ yyreduce:
               if (yydebug)
                 {
                   printf("external.definition # declaration\n");
-                  fPrintNode(stdout, FirstItem((yyvsp[(1) - (1)].L)), 0); 
+                  fPrintNode(stdout, FirstItem((yyvsp[(1) - (1)].L)), 0);
                   printf("\n\n\n");
 		}
               (yyval.L) = (yyvsp[(1) - (1)].L);
@@ -5673,11 +5671,11 @@ yyreduce:
 
   case 427:
 #line 1951 "ANSI-C.y"
-    { 
+    {
               if (yydebug)
                 {
                   printf("external.definition # function.definition\n");
-                  fPrintNode(stdout, (yyvsp[(1) - (1)].n), 0); 
+                  fPrintNode(stdout, (yyvsp[(1) - (1)].n), 0);
                   printf("\n\n\n");
                 }
               (yyval.L) = MakeNewList((yyvsp[(1) - (1)].n));
@@ -5696,8 +5694,8 @@ yyreduce:
 
   case 430:
 #line 1967 "ANSI-C.y"
-    { 
-              (yyvsp[(1) - (1)].n) = DefineProc(FALSE, 
+    {
+              (yyvsp[(1) - (1)].n) = DefineProc(FALSE,
                               SetDeclType((yyvsp[(1) - (1)].n),
 					  MakeDefaultPrimType(EMPTY_TQ, (yyvsp[(1) - (1)].n)->coord),
 					  Redecl));
@@ -5711,7 +5709,7 @@ yyreduce:
 
   case 433:
 #line 1990 "ANSI-C.y"
-    { 
+    {
 	      Node *decl = SetDeclType((yyvsp[(2) - (2)].n),
 				       MakeDefaultPrimType((yyvsp[(1) - (2)].tq).tq, (yyvsp[(1) - (2)].tq).coord),
 				       Redecl);
@@ -5726,7 +5724,7 @@ yyreduce:
 
   case 435:
 #line 1999 "ANSI-C.y"
-    { 
+    {
 	      Node *decl = SetDeclType((yyvsp[(2) - (2)].n),
 				       MakeDefaultPrimType((yyvsp[(1) - (2)].tq).tq, (yyvsp[(1) - (2)].tq).coord),
 				       Redecl);
@@ -5741,8 +5739,8 @@ yyreduce:
 
   case 437:
 #line 2008 "ANSI-C.y"
-    { 
-              (yyvsp[(1) - (1)].n) = DefineProc(TRUE, 
+    {
+              (yyvsp[(1) - (1)].n) = DefineProc(TRUE,
                               SetDeclType((yyvsp[(1) - (1)].n),
 					  MakeDefaultPrimType(EMPTY_TQ, (yyvsp[(1) - (1)].n)->coord),
 					  Redecl));
@@ -5756,7 +5754,7 @@ yyreduce:
 
   case 439:
 #line 2017 "ANSI-C.y"
-    {  Node *decl = SetDeclType((yyvsp[(2) - (2)].n), (yyvsp[(1) - (2)].n), Redecl);  
+    {  Node *decl = SetDeclType((yyvsp[(2) - (2)].n), (yyvsp[(1) - (2)].n), Redecl);
 
                AddParameterTypes(decl, NULL);
                (yyvsp[(2) - (2)].n) = DefineProc(TRUE, decl);
@@ -5869,9 +5867,9 @@ yyreduce:
 
   case 455:
 #line 2082 "ANSI-C.y"
-    { Node *type = MakeDefaultPrimType((yyvsp[(1) - (3)].tq).tq, (yyvsp[(1) - (3)].tq).coord), 
+    { Node *type = MakeDefaultPrimType((yyvsp[(1) - (3)].tq).tq, (yyvsp[(1) - (3)].tq).coord),
                    *decl = SetDeclType((yyvsp[(2) - (3)].n), type, Redecl);
-				       
+
 
               AddParameterTypes(decl, (yyvsp[(3) - (3)].L));
               (yyvsp[(2) - (3)].n) = DefineProc(TRUE, decl);
@@ -5890,7 +5888,7 @@ yyreduce:
 
   case 458:
 #line 2097 "ANSI-C.y"
-    { OldStyleFunctionDefinition = FALSE; 
+    { OldStyleFunctionDefinition = FALSE;
                (yyval.L) = (yyvsp[(2) - (2)].L); }
     break;
 
@@ -5931,7 +5929,7 @@ yyreduce:
               int   length = strlen(first_text) + strlen(second_text) + 1;
               char *buffer = HeapNewArray(char, length);
               char *new_text, *new_val;
-	
+
               /* since text (which includes quotes and escape codes)
 		 is always longer than value, it's safe to use buffer
 		 to concat both */
@@ -6429,10 +6427,9 @@ PRIVATE void WarnAboutPrecedence(OpType op, Node *node)
 
     if (op == OROR && subop == ANDAND)
       WarningCoord(4, node->coord, "suggest parentheses around && in operand of ||");
-    else if ((op == '|' || op == '^') && 
+    else if ((op == '|' || op == '^') &&
 	     (subop == '+' || subop == '-' || subop == '&' || subop == '^') &&
 	     op != subop)
       WarningCoord(4, node->coord, "suggest parentheses around arithmetic in operand of %c", op);
   }
 }
-
