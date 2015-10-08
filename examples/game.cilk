@@ -49,7 +49,7 @@ int naborts[MAX_PROC];
 int usage()
 /*
  * Not very useful since there are no options, but anyway to be
- * consistent with the other examples.  
+ * consistent with the other examples.
  */
 {
      printf("\n"
@@ -66,7 +66,7 @@ int usage()
      return 1;
 }
 
-inline void init_board(BOARD b)
+void init_board(BOARD b)
 {
      INDEX i, j;
 
@@ -76,13 +76,10 @@ inline void init_board(BOARD b)
 }
 
 /* test if the move is legal */
-inline int legal(BOARD b, INDEX i, INDEX j)
-{
-     return (b[i][j] == EMPTY);
-}
+#define legal(b, i, j) (b[i][j] == EMPTY)
 
 /* produce a new board nb with the given move */
-inline void move(BOARD b, INDEX r, INDEX c, BOARD nb)
+void move(BOARD b, INDEX r, INDEX c, BOARD nb)
 {
      INDEX i, j;
 
@@ -96,10 +93,7 @@ inline void move(BOARD b, INDEX r, INDEX c, BOARD nb)
 }
 
 /* return true if the position is lost */
-inline int lostp(BOARD b)
-{
-     return (b[N - 1][M - 1] == COIN);
-}
+#define lostp(b) (b[N - 1][M - 1] == COIN)
 
 /* do the negamax search */
 cilk int negamax(BOARDHACK b, INDEX *movei, INDEX *movej,
@@ -225,7 +219,7 @@ cilk int main(int argc, char *argv[])
 	    ((!(player)) ? "White" : "Black"), n);
 
      printf("\nCilk Example: game\n");
-     printf("	      running on %d processor%s\n\n", 
+     printf("	      running on %d processor%s\n\n",
 	    Cilk_active_size, Cilk_active_size > 1 ? "s" : "");
      printf("Running time  = %4f s\n", Cilk_wall_time_to_sec(tm_elapsed));
      printf("Work          = %4f s\n", Cilk_time_to_sec(wk_elapsed));
